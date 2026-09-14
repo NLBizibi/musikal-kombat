@@ -4,5 +4,10 @@ let nbFrappes = 0;
 
 bouton.addEventListener("click", () => {
     nbFrappes++;
-    message.textContent = "Frappes :" + nbFrappes;
+    if(nbFrappes<=4) {
+        message.textContent = "Combo : " + nbFrappes;
+    }
+    else {
+        message.textContent = "K.O. !"
+    }
 });
