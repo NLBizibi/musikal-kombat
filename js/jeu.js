@@ -13,6 +13,10 @@ function ajouterMessage(texte) {
 function afficherScore() {
     scoreDisplay.textContent = "Score : " + score;
 };
+function terminerPartie(){
+    partieTerminee = true;
+    bouton.disabled = true;
+};
 
 bouton.addEventListener("click", () => {
     if(partieTerminee === false) {
@@ -26,7 +30,7 @@ bouton.addEventListener("click", () => {
         }
         else {
             afficherMessage("Boum, K.O. !");
-            partieTerminee = true;
+            terminerPartie();
         }
         afficherScore();
     }
