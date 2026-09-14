@@ -1,6 +1,8 @@
 const bouton = document.getElementById("bouton");
 const message = document.getElementById("message");
+let nbFrappes = 0;
 
 bouton.addEventListener("click", () => {
-    message.textContent = "Boum !! ";
+    nbFrappes++;
+    message.textContent = "Frappes :" + nbFrappes;
 });
