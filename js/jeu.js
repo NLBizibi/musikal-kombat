@@ -3,7 +3,10 @@ const status = document.getElementById("status");
 const equipesDisplay = document.getElementById("equipesDisplay");
 const nouvellePartie = document.getElementById("nouvellePartie");
 const stop = document.getElementById("stop");
+const enonce = document.getElementById("question");
+const propositions = document.getElementById("propositions");
 let partieEnCours = false;
+
 const equipeTest = {
     nom: "Acabra",
     score: 0,
@@ -14,6 +17,17 @@ const equipe2 = {
     score: 0
 }
 const equipes = [equipeTest, equipe2];
+
+const question = {
+    texte: "Qui a interprété encore un matin ?",
+    reponse: [   
+            "Jean-Pierre Mader",
+            "Jean-Jacques Goldman",
+            "Daniel Balavoine",
+            "Johnny Hallyday"
+    ],
+    bonneReponse: 1
+}
 
 function afficherMessage(texte) {
     message.textContent = texte;
@@ -78,6 +92,7 @@ function ajouterPoint(indiceEquipe){
     else{
         alert("L'équipe " + equipes[indiceEquipe].nom + " est inactive !");
     }
+    afficherToutesEquipes();
 }
 function reinitScores() {
     for (let i = 0 ; i < equipes.length ; i++) {
@@ -87,6 +102,8 @@ function reinitScores() {
 }
 
 stop.style.display = "none";
+console.log(question);
+console.log(question.reponse[question.bonneReponse]);
 
 nouvellePartie.addEventListener("click", () => {
     demarrerPartie();
@@ -102,8 +119,25 @@ for (let i = 0; i < equipes.length; i++){
     equipesDisplay.appendChild(boutonEquipe);
     boutonEquipe.addEventListener ("click", () => {
         ajouterPoint(i);
-        afficherToutesEquipes();
     });
 };
+
+enonce.textContent = question.texte;
+
+for (let i = 0; i < question.reponse.length ; i++) {
+    const boutonReponse = document.createElement("button");
+    boutonReponse.textContent = question.reponse[i];
+    propositions.appendChild(boutonReponse);
+    boutonReponse.addEventListener("click", () => {
+        if (boutonReponse.textContent === question.reponse[question.bonneReponse]){
+            alert("Bonne réponse !");
+            ajouterPoint(0);
+        }
+        else {
+            alert("Mauvaise réponse ! Aïe !");
+        }
+    })
+}
+console.log(equipes[0].score);
 
 afficherToutesEquipes();
