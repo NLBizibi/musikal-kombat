@@ -6,6 +6,7 @@ const stop = document.getElementById("stop");
 const enonce = document.getElementById("question");
 const propositions = document.getElementById("propositions");
 let partieEnCours = false;
+let indiceEquipe = 0;
 
 const equipeTest = {
     nom: "Acabra",
@@ -101,6 +102,27 @@ function reinitScores() {
     }
     afficherToutesEquipes();
 }
+function creerQuestionPourEquipe(indiceEquipe) {
+    enonce.textContent = question.texte;
+
+    for (let i = 0; i < question.reponse.length ; i++) {
+        const boutonReponse = document.createElement("button");
+        boutonReponse.textContent = question.reponse[i];
+        propositions.appendChild(boutonReponse);
+        boutonReponse.addEventListener("click", () => {
+            if (!equipes[indiceEquipe].aRepondu) {
+                if (boutonReponse.textContent === question.reponse[question.bonneReponse]){
+                    alert("Bonne réponse !");
+                    ajouterPoint(indiceEquipe);
+                }
+                else {
+                    alert("Mauvaise réponse ! Aïe !");
+                }
+                equipes[indiceEquipe].aRepondu = true;
+            }
+        });
+    }
+}
 
 stop.style.display = "none";
 console.log(question);
@@ -125,23 +147,6 @@ for (let i = 0; i < equipes.length; i++){
 
 enonce.textContent = question.texte;
 
-for (let i = 0; i < question.reponse.length ; i++) {
-    const boutonReponse = document.createElement("button");
-    boutonReponse.textContent = question.reponse[i];
-    propositions.appendChild(boutonReponse);
-    boutonReponse.addEventListener("click", () => {
-        if (!equipes[0].aRepondu) {
-            if (boutonReponse.textContent === question.reponse[question.bonneReponse]){
-                alert("Bonne réponse !");
-                ajouterPoint(0);
-            }
-            else {
-                alert("Mauvaise réponse ! Aïe !");
-            }
-            equipes[0].aRepondu = true;
-        }
-    });
-}
-console.log(equipes[0].score);
+creerQuestionPourEquipe(0);
 
 afficherToutesEquipes();
