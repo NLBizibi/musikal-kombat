@@ -1,6 +1,8 @@
 const message = document.getElementById("message");
+const status = document.getElementById("status");
 const equipesDisplay = document.getElementById("equipesDisplay");
 const nouvellePartie = document.getElementById("nouvellePartie");
+let partieEnCours = false;
 const equipeTest = {
     nom: "Acabra",
     score: 0,
@@ -17,6 +19,29 @@ function afficherMessage(texte) {
 }
 function ajouterMessage(texte) {
     message.innerHTML += texte + "<br>";
+}
+function checkStatus() {
+    if (partieEnCours) {
+        status.textContent = "La partie est en cours !";
+    }
+    else {
+        status.textContent = "La partie est terminée !";
+    }
+}
+function demarrerPartie() {
+    if (partieEnCours) {
+        const confirmation = confirm("Es-tu sûr ?");
+        if (!confirmation) {
+            return;
+        }
+    }
+    reinitScores();
+    partieEnCours = true;
+    checkStatus();
+}
+function terminerPartie() {
+    partieEnCours = false;
+    checkStatus();
 }
 function afficherEquipe(nomEquipe, scoreEquipe, active){
     if (active === true) {
@@ -57,7 +82,7 @@ function reinitScores() {
 }
 
 nouvellePartie.addEventListener("click", () => {
-    reinitScores();
+    demarrerPartie();
 });
 
 for (let i = 0; i < equipes.length; i++){
