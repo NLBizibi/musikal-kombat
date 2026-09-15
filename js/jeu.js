@@ -2,6 +2,7 @@ const message = document.getElementById("message");
 const status = document.getElementById("status");
 const equipesDisplay = document.getElementById("equipesDisplay");
 const nouvellePartie = document.getElementById("nouvellePartie");
+const stop = document.getElementById("stop");
 let partieEnCours = false;
 const equipeTest = {
     nom: "Acabra",
@@ -38,9 +39,13 @@ function demarrerPartie() {
     reinitScores();
     partieEnCours = true;
     checkStatus();
+    nouvellePartie.style.display = "none";
+    stop.style.display = "block";
 }
 function terminerPartie() {
     partieEnCours = false;
+    nouvellePartie.style.display = "block";
+    stop.style.display = "none";
     checkStatus();
 }
 function afficherEquipe(nomEquipe, scoreEquipe, active){
@@ -81,8 +86,14 @@ function reinitScores() {
     afficherToutesEquipes();
 }
 
+stop.style.display = "none";
+
 nouvellePartie.addEventListener("click", () => {
     demarrerPartie();
+});
+
+stop.addEventListener("click", () => {
+    terminerPartie();
 });
 
 for (let i = 0; i < equipes.length; i++){
