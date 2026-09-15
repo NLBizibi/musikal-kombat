@@ -3,7 +3,8 @@ const equipesDisplay = document.getElementById("equipesDisplay");
 const nouvellePartie = document.getElementById("nouvellePartie");
 const equipeTest = {
     nom: "Acabra",
-    score: 0
+    score: 0,
+    active: true
 }
 const equipe2 = {
     nom: "Grumpies",
@@ -17,14 +18,28 @@ function afficherMessage(texte) {
 function ajouterMessage(texte) {
     message.innerHTML += texte + "<br>";
 }
-function afficherEquipe(nomEquipe, scoreEquipe){
-    ajouterMessage(nomEquipe + " : " + scoreEquipe);
-}
+function afficherEquipe(nomEquipe, scoreEquipe, active){
+    if (active === true) {
+        ajouterMessage(nomEquipe + " : " + scoreEquipe + " - Equipe active");
+    }
+    else {
+        ajouterMessage(nomEquipe + " : " + scoreEquipe + " - Equipe inactive");
+
+    }
+}  
 function afficherToutesEquipes() {
     afficherMessage("");
     for (let i = 0; i < equipes.length; i++) {
-        afficherEquipe(equipes[i].nom, equipes[i].score);
+        afficherEquipe(equipes[i].nom, equipes[i].score, equipes[i].active);
     };
+}
+function activerEquipe(indiceEquipe) {
+    equipes[indiceEquipe].active = true;
+    afficherToutesEquipes();
+}
+function desactiverEquipe(indiceEquipe) {
+    equipes[indiceEquipe].active = false;
+    afficherToutesEquipes();
 }
 function ajouterPoint(indiceEquipe){
     equipes[indiceEquipe].score++;
@@ -35,8 +50,6 @@ function reinitScores() {
     }
     afficherToutesEquipes();
 }
-
-afficherToutesEquipes();
 
 nouvellePartie.addEventListener("click", () => {
     reinitScores();
