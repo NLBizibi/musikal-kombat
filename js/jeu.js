@@ -1,6 +1,8 @@
 const bouton = document.getElementById("bouton");
 const message = document.getElementById("message");
 const scoreDisplay = document.getElementById("scoreDisplay");
+const equipes = ["Acabra", "Grumpies", "Rockers", "Meloche"];
+const scoresEquipes = [0, 0, 0, 0];
 const nouvellePartie = document.getElementById("nouvellePartie");
 let nbFrappes = 0;
 let score = 0;
@@ -9,7 +11,7 @@ function afficherMessage(texte) {
     message.textContent = texte;
 }
 function ajouterMessage(texte) {
-    message.textContent += texte;
+    message.innerHTML += texte + "<br>";
 }
 function afficherScore() {
     scoreDisplay.textContent = "Score : " + score;
@@ -28,9 +30,18 @@ function reinitPartie(){
     afficherScore();
     afficherMessage("");
 }
+function afficherEquipe(nomEquipe, scoreEquipe){
+    ajouterMessage(nomEquipe + " : " + scoreEquipe);
+}
 
 nouvellePartie.style.display = "none";
 
+scoresEquipes[2]++;
+
+for (let i = 0; i < equipes.length; i++) {
+    afficherEquipe(equipes[i], scoresEquipes[i]);
+};
+/*
 bouton.addEventListener("click", () => {
     if(partieTerminee === false) {
         nbFrappes++;
@@ -44,6 +55,7 @@ bouton.addEventListener("click", () => {
         else {
             afficherMessage("Boum, K.O. !");
             terminerPartie();
+            afficherEquipe()
         }
         afficherScore();
     }
@@ -52,3 +64,4 @@ bouton.addEventListener("click", () => {
 nouvellePartie.addEventListener("click", () => {
     reinitPartie();
 });
+*/
