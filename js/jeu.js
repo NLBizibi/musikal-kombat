@@ -42,7 +42,12 @@ function desactiverEquipe(indiceEquipe) {
     afficherToutesEquipes();
 }
 function ajouterPoint(indiceEquipe){
-    equipes[indiceEquipe].score++;
+    if(equipes[indiceEquipe].active) {
+        equipes[indiceEquipe].score++;
+    }
+    else{
+        alert("L'équipe " + equipes[indiceEquipe].nom + " est inactive !");
+    }
 }
 function reinitScores() {
     for (let i = 0 ; i < equipes.length ; i++) {
