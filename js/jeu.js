@@ -72,7 +72,13 @@ function afficherEquipe(nomEquipe, scoreEquipe, active){
         ajouterMessage(nomEquipe + " : " + scoreEquipe + " - Equipe inactive");
 
     }
-}  
+}
+function trouverEquipe(indice) {
+    return equipes[indice];
+}
+function afficherNomEquipe(indice) {
+    return trouverEquipe(indice).nom;
+}
 function afficherToutesEquipes() {
     afficherMessage("");
     for (let i = 0; i < equipes.length; i++) {
@@ -103,14 +109,13 @@ function reinitScores() {
     afficherToutesEquipes();
 }
 function creerQuestionPourEquipe(indiceEquipe) {
-    enonce.textContent = question.texte;
-
+    const equipe = trouverEquipe(indiceEquipe);
     for (let i = 0; i < question.reponse.length ; i++) {
         const boutonReponse = document.createElement("button");
         boutonReponse.textContent = question.reponse[i];
         propositions.appendChild(boutonReponse);
         boutonReponse.addEventListener("click", () => {
-            if (!equipes[indiceEquipe].aRepondu) {
+            if (!equipe.aRepondu) {
                 if (boutonReponse.textContent === question.reponse[question.bonneReponse]){
                     alert("Bonne réponse !");
                     ajouterPoint(indiceEquipe);
@@ -118,15 +123,22 @@ function creerQuestionPourEquipe(indiceEquipe) {
                 else {
                     alert("Mauvaise réponse ! Aïe !");
                 }
-                equipes[indiceEquipe].aRepondu = true;
+                equipe.aRepondu = true;
             }
         });
     }
 }
+function reinitialiserReponses() {
+    for (let i = 0 ; i < equipes.length ; i++) {
+        equipes[i].aRepondu = false;
+    }
+}
+function nouvelleQuestion() {
+    reinitialiserReponses();
+    enonce.textContent = question.texte;
+}
 
 stop.style.display = "none";
-console.log(question);
-console.log(question.reponse[question.bonneReponse]);
 
 nouvellePartie.addEventListener("click", () => {
     demarrerPartie();
