@@ -25,8 +25,16 @@ function afficherToutesEquipes() {
 function ajouterPoint(indiceEquipe){
     scoresEquipes[indiceEquipe]++;
 }
+function reinitScores() {
+    for (let i = 0 ; i < equipes.length ; i++) {
+        scoresEquipes[i] = 0;
+    }
+    afficherToutesEquipes();
+}
 
-nouvellePartie.style.display = "none";
+nouvellePartie.addEventListener("click", () => {
+    reinitScores();
+});
 
 for (let i = 0; i < equipes.length; i++){
     const boutonEquipe = document.createElement("button");
