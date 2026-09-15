@@ -156,6 +156,7 @@ function reinitialiserReponses() {
 function nouvelleQuestion() {
     if (indiceQuestion < questions.length) {
         reinitialiserReponses();
+        propositions.innerHTML = "";
         enonce.textContent = questions[indiceQuestion].texte;
         for (let i = 0 ; i < equipes.length ; i++) {
             creerQuestionPourEquipe(i, questions[indiceQuestion]);
