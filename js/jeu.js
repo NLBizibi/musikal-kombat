@@ -1,17 +1,21 @@
 const message = document.getElementById("message");
-const scoreDisplay = document.getElementById("scoreDisplay");
 const equipesDisplay = document.getElementById("equipesDisplay");
-const equipes = ["Acabra", "Grumpies", "Rockers", "Meloche"];
-const scoresEquipes = [0, 0, 0, 0];
 const nouvellePartie = document.getElementById("nouvellePartie");
+const equipeTest = {
+    nom: "Acabra",
+    score: 0
+}
+const equipe2 = {
+    nom: "Grumpies",
+    score: 0
+}
+const equipes = [equipeTest, equipe2];
+
 function afficherMessage(texte) {
     message.textContent = texte;
 }
 function ajouterMessage(texte) {
     message.innerHTML += texte + "<br>";
-}
-function afficherScore() {
-    scoreDisplay.textContent = "Score : " + score;
 }
 function afficherEquipe(nomEquipe, scoreEquipe){
     ajouterMessage(nomEquipe + " : " + scoreEquipe);
@@ -19,18 +23,20 @@ function afficherEquipe(nomEquipe, scoreEquipe){
 function afficherToutesEquipes() {
     afficherMessage("");
     for (let i = 0; i < equipes.length; i++) {
-        afficherEquipe(equipes[i], scoresEquipes[i]);
+        afficherEquipe(equipes[i].nom, equipes[i].score);
     };
 }
 function ajouterPoint(indiceEquipe){
-    scoresEquipes[indiceEquipe]++;
+    equipes[indiceEquipe].score++;
 }
 function reinitScores() {
     for (let i = 0 ; i < equipes.length ; i++) {
-        scoresEquipes[i] = 0;
+        equipes[i].score = 0;
     }
     afficherToutesEquipes();
 }
+
+afficherToutesEquipes();
 
 nouvellePartie.addEventListener("click", () => {
     reinitScores();
@@ -38,7 +44,7 @@ nouvellePartie.addEventListener("click", () => {
 
 for (let i = 0; i < equipes.length; i++){
     const boutonEquipe = document.createElement("button");
-    boutonEquipe.textContent = equipes[i];
+    boutonEquipe.textContent = equipes[i].nom;
     equipesDisplay.appendChild(boutonEquipe);
     boutonEquipe.addEventListener ("click", () => {
         ajouterPoint(i);
@@ -47,8 +53,3 @@ for (let i = 0; i < equipes.length; i++){
 };
 
 afficherToutesEquipes();
-
-bouton.addEventListener("click", () => {
-    ajouterPoint(0);
-    afficherToutesEquipes();
-});
