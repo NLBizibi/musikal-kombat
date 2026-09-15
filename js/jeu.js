@@ -10,7 +10,8 @@ let partieEnCours = false;
 const equipeTest = {
     nom: "Acabra",
     score: 0,
-    active: true
+    active: true,
+    aRepondu: false
 }
 const equipe2 = {
     nom: "Grumpies",
@@ -129,14 +130,17 @@ for (let i = 0; i < question.reponse.length ; i++) {
     boutonReponse.textContent = question.reponse[i];
     propositions.appendChild(boutonReponse);
     boutonReponse.addEventListener("click", () => {
-        if (boutonReponse.textContent === question.reponse[question.bonneReponse]){
-            alert("Bonne réponse !");
-            ajouterPoint(0);
+        if (!equipes[0].aRepondu) {
+            if (boutonReponse.textContent === question.reponse[question.bonneReponse]){
+                alert("Bonne réponse !");
+                ajouterPoint(0);
+            }
+            else {
+                alert("Mauvaise réponse ! Aïe !");
+            }
+            equipes[0].aRepondu = true;
         }
-        else {
-            alert("Mauvaise réponse ! Aïe !");
-        }
-    })
+    });
 }
 console.log(equipes[0].score);
 
