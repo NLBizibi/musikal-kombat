@@ -5,8 +5,10 @@ const nouvellePartie = document.getElementById("nouvellePartie");
 const stop = document.getElementById("stop");
 const enonce = document.getElementById("question");
 const propositions = document.getElementById("propositions");
+
 let partieEnCours = false;
 let indiceEquipe = 0;
+let indiceQuestion = 0;
 
 const equipeTest = {
     nom: "Acabra",
@@ -16,7 +18,9 @@ const equipeTest = {
 }
 const equipe2 = {
     nom: "Grumpies",
-    score: 0
+    score: 0,
+    active: true,
+    aRepondu: false
 }
 const equipes = [equipeTest, equipe2];
 
@@ -30,6 +34,17 @@ const question = {
     ],
     bonneReponse: 1
 }
+const question2 = {
+    texte: "Qui a chanté Gigi l'Amoroso ?",
+    reponse: [
+            "Michèle Torr",
+            "Mireille Matthieu",
+            "Dalida",
+            "France Gall"
+    ],
+    bonneReponse: 2
+}
+const questions = [question, question2];
 
 function afficherMessage(texte) {
     message.textContent = texte;
@@ -52,11 +67,13 @@ function demarrerPartie() {
             return;
         }
     }
+    indiceQuestion = 0;
     reinitScores();
     partieEnCours = true;
     checkStatus();
     nouvellePartie.style.display = "none";
     stop.style.display = "block";
+    nouvelleQuestion();
 }
 function terminerPartie() {
     partieEnCours = false;
@@ -108,15 +125,15 @@ function reinitScores() {
     }
     afficherToutesEquipes();
 }
-function creerQuestionPourEquipe(indiceEquipe) {
+function creerQuestionPourEquipe(indiceEquipe, questionActuelle) {
     const equipe = trouverEquipe(indiceEquipe);
-    for (let i = 0; i < question.reponse.length ; i++) {
+    for (let i = 0; i < questionActuelle.reponse.length ; i++) {
         const boutonReponse = document.createElement("button");
-        boutonReponse.textContent = question.reponse[i];
+        boutonReponse.textContent = questionActuelle.reponse[i];
         propositions.appendChild(boutonReponse);
         boutonReponse.addEventListener("click", () => {
             if (!equipe.aRepondu) {
-                if (boutonReponse.textContent === question.reponse[question.bonneReponse]){
+                if (boutonReponse.textContent === questionActuelle.reponse[questionActuelle.bonneReponse]){
                     alert("Bonne réponse !");
                     ajouterPoint(indiceEquipe);
                 }
@@ -124,6 +141,9 @@ function creerQuestionPourEquipe(indiceEquipe) {
                     alert("Mauvaise réponse ! Aïe !");
                 }
                 equipe.aRepondu = true;
+                if (toutesLesEquipesOntRepondu()) {
+                    nouvelleQuestion();
+                }
             }
         });
     }
@@ -134,11 +154,31 @@ function reinitialiserReponses() {
     }
 }
 function nouvelleQuestion() {
-    reinitialiserReponses();
-    enonce.textContent = question.texte;
+    if (indiceQuestion < questions.length) {
+        reinitialiserReponses();
+        enonce.textContent = questions[indiceQuestion].texte;
+        for (let i = 0 ; i < equipes.length ; i++) {
+            creerQuestionPourEquipe(i, questions[indiceQuestion]);
+        }
+        indiceQuestion++;
+    }
+    else {
+        terminerPartie();
+    }
+}
+function toutesLesEquipesOntRepondu() {
+    for (let i = 0 ; i < equipes.length; i++) {
+        if(!trouverEquipe(i).aRepondu) {
+            return false;
+        }
+    }
+    return true;
 }
 
 stop.style.display = "none";
+indiceQuestion = 2;
+console.log(questions[indiceQuestion]);
+
 
 nouvellePartie.addEventListener("click", () => {
     demarrerPartie();
@@ -156,9 +196,5 @@ for (let i = 0; i < equipes.length; i++){
         ajouterPoint(i);
     });
 };
-
-enonce.textContent = question.texte;
-
-creerQuestionPourEquipe(0);
 
 afficherToutesEquipes();
