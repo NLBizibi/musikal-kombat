@@ -5,10 +5,13 @@ const nouvellePartie = document.getElementById("nouvellePartie");
 const stop = document.getElementById("stop");
 const enonce = document.getElementById("question");
 const propositions = document.getElementById("propositions");
+const chrono = document.getElementById("chrono");
 
 let partieEnCours = false;
 let indiceEquipe = 0;
 let indiceQuestion = 0;
+let tempsRestant = 30;
+let maitreDuTemps;
 
 const equipeTest = {
     nom: "Acabra",
@@ -162,10 +165,27 @@ function nouvelleQuestion() {
             creerQuestionPourEquipe(i, questions[indiceQuestion]);
         }
         indiceQuestion++;
+        demarrerChrono();
     }
     else {
         terminerPartie();
     }
+}
+function demarrerChrono(){
+    clearInterval(maitreDuTemps);
+    tempsRestant = 30;
+    chrono.textContent = tempsRestant;
+    maitreDuTemps = setInterval(() => {
+    tempsRestant--;
+    chrono.textContent = tempsRestant;
+    if (tempsRestant === 0) {
+        clearInterval(maitreDuTemps);
+        for (let i = 0; i < equipes.length; i++) {
+            equipes[i].aRepondu = true;
+        }
+        nouvelleQuestion();
+    }
+}, 1000);
 }
 function toutesLesEquipesOntRepondu() {
     for (let i = 0 ; i < equipes.length; i++) {
@@ -177,6 +197,7 @@ function toutesLesEquipesOntRepondu() {
 }
 
 stop.style.display = "none";
+chrono.textContent = "30";
 
 nouvellePartie.addEventListener("click", () => {
     demarrerPartie();
