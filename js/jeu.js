@@ -12,6 +12,7 @@ let indiceEquipe = 0;
 let indiceQuestion = 0;
 let tempsRestant = 30;
 let maitreDuTemps;
+let premiereEquipe = null;
 
 const equipeTest = {
     nom: "Acabra",
@@ -122,6 +123,10 @@ function ajouterPoint(indiceEquipe){
     }
     afficherToutesEquipes();
 }
+function ajouterPointRapidite(indiceEquipe) {
+    equipes[indiceEquipe].score++;
+    afficherToutesEquipes();
+}
 function reinitScores() {
     for (let i = 0 ; i < equipes.length ; i++) {
         equipes[i].score = 0;
@@ -130,20 +135,29 @@ function reinitScores() {
 }
 function creerQuestionPourEquipe(indiceEquipe, questionActuelle) {
     const equipe = trouverEquipe(indiceEquipe);
+    const conteneurEquipe = document.createElement("div");
+    propositions.appendChild(conteneurEquipe);
     for (let i = 0; i < questionActuelle.reponse.length ; i++) {
         const boutonReponse = document.createElement("button");
         boutonReponse.textContent = questionActuelle.reponse[i];
-        propositions.appendChild(boutonReponse);
+        conteneurEquipe.appendChild(boutonReponse);
         boutonReponse.addEventListener("click", () => {
             if (!equipe.aRepondu) {
                 if (boutonReponse.textContent === questionActuelle.reponse[questionActuelle.bonneReponse]){
                     alert("Bonne réponse !");
                     ajouterPoint(indiceEquipe);
+                    if (premiereEquipe === null) {
+                        premiereEquipe = indiceEquipe;
+                        ajouterPointRapidite(indiceEquipe);
+                    }
                 }
                 else {
                     alert("Mauvaise réponse ! Aïe !");
                 }
                 equipe.aRepondu = true;
+                for (let i = 0; i < conteneurEquipe.children.length; i++) {
+                    conteneurEquipe.children[i].disabled = true;
+                }
                 if (toutesLesEquipesOntRepondu()) {
                     nouvelleQuestion();
                 }
@@ -152,6 +166,7 @@ function creerQuestionPourEquipe(indiceEquipe, questionActuelle) {
     }
 }
 function reinitialiserReponses() {
+    premiereEquipe = null;
     for (let i = 0 ; i < equipes.length ; i++) {
         equipes[i].aRepondu = false;
     }
