@@ -177,9 +177,6 @@ function toutesLesEquipesOntRepondu() {
 }
 
 stop.style.display = "none";
-indiceQuestion = 2;
-console.log(questions[indiceQuestion]);
-
 
 nouvellePartie.addEventListener("click", () => {
     demarrerPartie();
