@@ -136,7 +136,10 @@ function reinitScores() {
 function creerQuestionPourEquipe(indiceEquipe, questionActuelle) {
     const equipe = trouverEquipe(indiceEquipe);
     const conteneurEquipe = document.createElement("div");
+    const titreEquipe = document.createElement("h2");
+    titreEquipe.textContent = equipes[indiceEquipe].nom;
     propositions.appendChild(conteneurEquipe);
+    conteneurEquipe.appendChild(titreEquipe);
     for (let i = 0; i < questionActuelle.reponse.length ; i++) {
         const boutonReponse = document.createElement("button");
         boutonReponse.textContent = questionActuelle.reponse[i];
