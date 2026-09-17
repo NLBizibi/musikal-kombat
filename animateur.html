@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Musikal Kombat - Animateur</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <header>
+        <h1>Musikal Kombat</h1>
+        <p>Écran animateur</p>
+    </header>
+
+    <main>
+
+        <section id="zoneAnimateur">
+
+            <p id="statusAnimateur">En attente d'une partie</p>
+
+            <button id="nouvellePartie">Nouvelle partie</button>
+
+            <div id="infosQuestion">
+                <p id="numeroQuestion">Question —</p>
+                <p id="chrono">—</p>
+            </div>
+
+            <h2>Question</h2>
+
+            <p id="question">
+                En attente du lancement de la partie...
+            </p>
+
+        </section>
+
+
+        <section id="zoneScores">
+
+            <h2>Scores</h2>
+
+            <div id="equipesDisplay"></div>
+
+        </section>
+
+    </main>
+
+    <a href="index.html">Accueil</a>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/animateur.js"></script>
+    
+</body>
+</html>

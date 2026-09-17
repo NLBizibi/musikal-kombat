@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Musikal Kombat - Équipe</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <header>
+        <h1>Musikal Kombat</h1>
+        <p id="nomEquipe">Équipe</p>
+    </header>
+
+
+    <main>
+
+        <section id="interfaceEquipe">
+
+            <p id="statusEquipe">
+                En attente de la partie...
+            </p>
+
+            <h2 id="questionEquipe">
+                En attente de la question...
+            </h2>
+
+            <div id="propositionsEquipe">
+
+                <button>Réponse 1</button>
+                <button>Réponse 2</button>
+                <button>Réponse 3</button>
+                <button>Réponse 4</button>
+
+            </div>
+
+            <p id="chronoEquipe">—</p>
+
+        </section>
+
+
+        <section id="scoreEquipe">
+
+            <h2>Score</h2>
+
+            <p id="score">0</p>
+
+        </section>
+
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/equipe.js"></script>
+    
+</body>
+</html>

@@ -56,3 +56,34 @@ button:disabled {
 #zoneFin {
     display: none;
 }
+
+#zoneAnimateur,
+#interfaceEquipe,
+#zoneScores,
+#scoreEquipe {
+    max-width: 900px;
+    margin: 30px auto;
+}
+
+#propositionsEquipe {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 500px;
+    margin: 30px auto;
+}
+
+#propositionsEquipe button {
+    font-size: 1.2em;
+    padding: 15px;
+}
+
+#chronoEquipe {
+    font-size: 3em;
+    font-weight: bold;
+}
+
+#score {
+    font-size: 3em;
+    font-weight: bold;
+}
