@@ -1,4 +1,58 @@
 body {
     background-color: black;
     color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+}
+
+button {
+    padding: 10px 20px;
+    margin: 5px;
+    cursor: pointer;
+}
+
+button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+#infosQuestion {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    font-size: 1.3em;
+    font-weight: bold;
+}
+
+#chrono {
+    font-size: 2em;
+}
+
+#propositions {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 800px;
+    margin: 20px auto;
+}
+
+#propositions > div {
+    border: 1px solid white;
+    padding: 15px;
+}
+
+#propositions h2 {
+    margin-top: 0;
+}
+
+#equipesDisplay {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+}
+
+#zoneFin {
+    display: none;
 }

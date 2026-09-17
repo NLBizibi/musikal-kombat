@@ -7,19 +7,50 @@
     <link rel="stylesheet" href="css/style.css">
     <script src="js/jeu.js" defer></script>
 </head>
+
 <body>
-    <h1>Bienvenue dans Musikal Kombat</h1>
-    <p>Le jeu musical qui te fera boxer ton tel !</p>
-    <p id="status"></p>
-    <p id="message"></p>
-    <button id="nouvellePartie">Nouvelle partie</button>
-    <button id="stop">Clore la partie</button>
-    <h2>Equipes</h2>
-    <div id="equipesDisplay"></div>
-    <h1>Question :</h1>
-    <p id="question"></p>
-    <div id="propositions"></div>
-    <p id ="chrono"></p>
+
+    <header>
+        <h1>Musikal Kombat</h1>
+        <p>Le jeu musical qui te fera boxer ton tel !</p>
+    </header>
+
+    <main>
+
+        <section id="zoneJeu">
+
+            <p id="status"></p>
+
+            <button id="nouvellePartie">Nouvelle partie</button>
+            <button id="stop">Clore la partie</button>
+
+            <div id="infosQuestion">
+                <p id="numeroQuestion"></p>
+                <p id="chrono"></p>
+            </div>
+
+            <h2>Question</h2>
+            <p id="question"></p>
+
+            <div id="propositions"></div>
+
+        </section>
+
+        <section id="zoneScores">
+
+            <h2>Scores</h2>
+            <div id="equipesDisplay"></div>
+
+        </section>
+
+        <section id="zoneFin">
+            <h2>Fin de partie</h2>
+            <div id="classement"></div>
+        </section>
+
+    </main>
+
     <a href="index.html">Accueil</a>
+
 </body>
 </html>
