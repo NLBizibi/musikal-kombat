@@ -128,15 +128,6 @@ io.on("connection", (socket) => {
 
 socket.on("inscription-equipe", (nomEquipe) => {
 
-    if (partieEnCours) {
-        socket.emit(
-            "inscription-refusee",
-            "La partie a déjà commencé."
-        );
-
-        return;
-    }
-
     if (typeof nomEquipe !== "string") {
         socket.emit(
             "inscription-refusee",
@@ -147,6 +138,32 @@ socket.on("inscription-equipe", (nomEquipe) => {
     }
 
     nomEquipe = nomEquipe.trim();
+
+    if (partieEnCours) {
+
+    if (!equipes[nomEquipe]) {
+
+        socket.emit(
+            "inscription-refusee",
+            "La partie a déjà commencé."
+        );
+
+        return;
+    }
+
+    if (
+        equipes[nomEquipe].connectee &&
+        equipes[nomEquipe].socketId !== socket.id
+    ) {
+
+        socket.emit(
+            "inscription-refusee",
+            "Ce nom d'équipe est déjà connecté."
+        );
+
+        return;
+    }
+}
 
     if (nomEquipe.length < 2) {
         socket.emit(
@@ -192,22 +209,21 @@ socket.on("inscription-equipe", (nomEquipe) => {
 
     } else {
 
-        equipes[nomEquipe].socketId =
-            socket.id;
+        equipes[nomEquipe].socketId = socket.id;
+        equipes[nomEquipe].connectee = true;
 
-        equipes[nomEquipe].connectee =
-            true;
+        // Si la reconnexion a lieu pendant une question,
+        // l'équipe reprendra à la question suivante.
+        if (partieEnCours) {
+            equipes[nomEquipe].aRepondu = true;
+        }
     }
 
     socket.emit("inscription-validee", {
         nom: nomEquipe,
-        score: equipes[nomEquipe].score
+        score: equipes[nomEquipe].score,
+        partieEnCours: partieEnCours
     });
-
-    console.log(
-    "Liste envoyée à l'animateur :",
-    creerListeEquipes()
-    );
 
     io.emit(
         "liste-equipes",
@@ -298,33 +314,47 @@ socket.on("inscription-equipe", (nomEquipe) => {
 
     socket.on("disconnect", () => {
 
-    if (
-        socket.nomEquipe &&
-        equipes[socket.nomEquipe] &&
-        equipes[socket.nomEquipe].socketId === socket.id
-    ) {
-        equipes[socket.nomEquipe].socketId =
-            null;
+        if (
+            socket.nomEquipe &&
+            equipes[socket.nomEquipe] &&
+            equipes[socket.nomEquipe].socketId === socket.id
+        ) {
 
-        equipes[socket.nomEquipe].connectee =
-            false;
+            equipes[socket.nomEquipe].socketId =
+                null;
 
-        io.emit(
-            "liste-equipes",
-            creerListeEquipes()
-        );
+            equipes[socket.nomEquipe].connectee =
+                false;
 
-        console.log(
-            socket.nomEquipe +
-            " s'est déconnecté"
-        );
+            // Une équipe déconnectée ne doit pas
+            // empêcher la progression du jeu.
+            if (partieEnCours) {
 
-    } else {
+                equipes[socket.nomEquipe].aRepondu =
+                    true;
 
-        console.log(
-            "Un appareil vient de se déconnecter"
-        );
-    }
+                if (toutesLesEquipesOntRepondu()) {
+                    clearInterval(chrono);
+                    questionSuivante();
+                }
+            }
+
+            io.emit(
+                "liste-equipes",
+                creerListeEquipes()
+            );
+
+            console.log(
+                socket.nomEquipe +
+                " s'est déconnecté"
+            );
+
+        } else {
+
+            console.log(
+                "Un appareil vient de se déconnecter"
+            );
+        }
     });
 });
 
@@ -420,9 +450,11 @@ function terminerPartie() {
 }
 
 function creerListeEquipes() {
+
     const liste = [];
 
     for (const nomEquipe in equipes) {
+
         liste.push({
             nom: nomEquipe,
             score: equipes[nomEquipe].score,

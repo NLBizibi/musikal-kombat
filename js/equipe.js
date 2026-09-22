@@ -41,201 +41,300 @@ const nomEquipeDisplay =
 
 let nomEquipe = null;
 
-
 interfaceEquipe.style.display = "none";
 scoreEquipe.style.display = "none";
 
 
 socket.on("connect", () => {
+
     console.log("Équipe connectée au serveur");
+
+    const nomSauvegarde =
+        localStorage.getItem("musikalKombatEquipe");
+
+    if (nomSauvegarde) {
+
+        console.log(
+            "Tentative de reconnexion avec " +
+            nomSauvegarde
+        );
+
+        socket.emit(
+            "inscription-equipe",
+            nomSauvegarde
+        );
+    }
 });
 
 
 socket.on("disconnect", () => {
-    console.log("Équipe déconnectée du serveur");
 
-    if (nomEquipe === null) {
+    console.log(
+        "Équipe déconnectée du serveur"
+    );
+
+    if (nomEquipe !== null) {
+
+        statusEquipe.textContent =
+            "⚠️ Connexion perdue. Reconnexion en cours...";
+    } else {
+
         statusInscription.textContent =
             "Connexion au serveur perdue.";
     }
 });
 
 
-formInscription.addEventListener("submit", (event) => {
-    event.preventDefault();
+formInscription.addEventListener(
+    "submit",
+    (event) => {
 
-    const nomSaisi =
-        nomEquipeInput.value.trim();
+        event.preventDefault();
 
-    if (nomSaisi.length < 2) {
+        const nomSaisi =
+            nomEquipeInput.value.trim();
+
+        if (nomSaisi.length < 2) {
+
+            statusInscription.textContent =
+                "Le nom doit contenir au moins 2 caractères.";
+
+            return;
+        }
+
+        boutonInscription.disabled = true;
+
         statusInscription.textContent =
-            "Le nom doit contenir au moins 2 caractères.";
+            "Inscription en cours...";
 
-        return;
+        socket.emit(
+            "inscription-equipe",
+            nomSaisi
+        );
     }
-
-    boutonInscription.disabled = true;
-
-    statusInscription.textContent =
-        "Inscription en cours...";
-
-    socket.emit(
-        "inscription-equipe",
-        nomSaisi
-    );
-});
+);
 
 
-socket.on("inscription-validee", (donnees) => {
-    nomEquipe = donnees.nom;
+socket.on(
+    "inscription-validee",
+    (donnees) => {
 
-    nomEquipeDisplay.textContent =
-        donnees.nom;
+        nomEquipe =
+            donnees.nom;
 
-    score.textContent =
-        donnees.score;
+        localStorage.setItem(
+            "musikalKombatEquipe",
+            nomEquipe
+        );
 
-    zoneInscription.style.display = "none";
+        nomEquipeDisplay.textContent =
+            donnees.nom;
 
-    interfaceEquipe.style.display = "block";
+        score.textContent =
+            donnees.score;
 
-    scoreEquipe.style.display = "block";
+        zoneInscription.style.display =
+            "none";
 
-    statusEquipe.textContent =
-        "Équipe inscrite ! En attente de la partie...";
+        interfaceEquipe.style.display =
+            "block";
 
-    console.log(
-        "Équipe inscrite : " +
-        donnees.nom
-    );
-});
+        scoreEquipe.style.display =
+            "block";
 
-
-socket.on("inscription-refusee", (message) => {
-    statusInscription.textContent =
-        message;
-
-    boutonInscription.disabled = false;
-});
-
-
-socket.on("partie-demarree", () => {
-    statusEquipe.textContent =
-        "La partie est en cours !";
-});
-
-
-socket.on("nouvelle-question", (question) => {
-
-    console.log(
-        "Question " +
-        question.numero +
-        " / " +
-        question.total
-    );
-
-    statusEquipe.textContent =
-        "À vous de jouer !";
-
-    questionEquipe.textContent =
-        question.texte;
-
-    propositionsEquipe.innerHTML = "";
-
-    for (
-        let i = 0;
-        i < question.reponses.length;
-        i++
-    ) {
-        const bouton =
-            document.createElement("button");
-
-        bouton.textContent =
-            question.reponses[i];
-
-        bouton.addEventListener("click", () => {
-
-            socket.emit(
-                "reponse-equipe",
-                i
-            );
-
-            for (
-                let j = 0;
-                j < propositionsEquipe.children.length;
-                j++
-            ) {
-                propositionsEquipe.children[j].disabled =
-                    true;
-            }
+        if (donnees.partieEnCours) {
 
             statusEquipe.textContent =
-                "Réponse envoyée...";
-        });
+                "Reconnexion réussie. Vous reprendrez à la prochaine question.";
 
-        propositionsEquipe.appendChild(bouton);
+        } else {
+
+            statusEquipe.textContent =
+                "Équipe inscrite ! En attente de la partie...";
+        }
+
+        console.log(
+            "Équipe inscrite : " +
+            donnees.nom
+        );
     }
-});
+);
 
 
-socket.on("resultat-reponse", (resultat) => {
+socket.on(
+    "inscription-refusee",
+    (message) => {
 
-    if (resultat.bonne) {
+        statusInscription.textContent =
+            message;
+
+        boutonInscription.disabled =
+            false;
+
+        zoneInscription.style.display =
+            "block";
+
+        interfaceEquipe.style.display =
+            "none";
+
+        scoreEquipe.style.display =
+            "none";
+    }
+);
+
+
+socket.on(
+    "partie-demarree",
+    () => {
 
         statusEquipe.textContent =
-            "✅ Bonne réponse !";
+            "La partie est en cours !";
+    }
+);
 
-    } else {
+
+socket.on(
+    "nouvelle-question",
+    (question) => {
+
+        console.log(
+            "Question " +
+            question.numero +
+            " / " +
+            question.total
+        );
 
         statusEquipe.textContent =
-            "❌ Mauvaise réponse !";
+            "À vous de jouer !";
+
+        questionEquipe.textContent =
+            question.texte;
+
+        propositionsEquipe.innerHTML =
+            "";
+
+        for (
+            let i = 0;
+            i < question.reponses.length;
+            i++
+        ) {
+
+            const bouton =
+                document.createElement("button");
+
+            bouton.textContent =
+                question.reponses[i];
+
+            bouton.addEventListener(
+                "click",
+                () => {
+
+                    socket.emit(
+                        "reponse-equipe",
+                        i
+                    );
+
+                    for (
+                        let j = 0;
+                        j < propositionsEquipe.children.length;
+                        j++
+                    ) {
+
+                        propositionsEquipe.children[j].disabled =
+                            true;
+                    }
+
+                    statusEquipe.textContent =
+                        "Réponse envoyée...";
+                }
+            );
+
+            propositionsEquipe.appendChild(
+                bouton
+            );
+        }
     }
-});
+);
 
 
-socket.on("score", (nouveauScore) => {
+socket.on(
+    "resultat-reponse",
+    (resultat) => {
 
-    score.textContent =
-        nouveauScore;
-});
+        if (resultat.bonne) {
+
+            statusEquipe.textContent =
+                "✅ Bonne réponse !";
+
+        } else {
+
+            statusEquipe.textContent =
+                "❌ Mauvaise réponse !";
+        }
+    }
+);
 
 
-socket.on("scores", (scores) => {
+socket.on(
+    "score",
+    (nouveauScore) => {
 
-    if (
-        nomEquipe !== null &&
-        scores[nomEquipe]
-    ) {
         score.textContent =
-            scores[nomEquipe].score;
+            nouveauScore;
     }
-});
+);
 
 
-socket.on("chrono", (temps) => {
+socket.on(
+    "scores",
+    (scores) => {
 
-    chronoEquipe.textContent =
-        temps + " s";
-});
+        if (
+            nomEquipe !== null &&
+            scores[nomEquipe]
+        ) {
+
+            score.textContent =
+                scores[nomEquipe].score;
+        }
+    }
+);
 
 
-socket.on("temps-ecoule", () => {
+socket.on(
+    "chrono",
+    (temps) => {
 
-    statusEquipe.textContent =
-        "⏱️ Temps écoulé !";
-});
+        chronoEquipe.textContent =
+            temps + " s";
+    }
+);
 
 
-socket.on("partie-terminee", () => {
+socket.on(
+    "temps-ecoule",
+    () => {
 
-    statusEquipe.textContent =
-        "La partie est terminée !";
+        statusEquipe.textContent =
+            "⏱️ Temps écoulé !";
+    }
+);
 
-    questionEquipe.textContent =
-        "";
 
-    propositionsEquipe.innerHTML = "";
+socket.on(
+    "partie-terminee",
+    () => {
 
-    chronoEquipe.textContent =
-        "—";
-});
+        statusEquipe.textContent =
+            "La partie est terminée !";
+
+        questionEquipe.textContent =
+            "";
+
+        propositionsEquipe.innerHTML =
+            "";
+
+        chronoEquipe.textContent =
+            "—";
+    }
+);
