@@ -1,5 +1,26 @@
 const socket = io();
 
+const zoneInscription =
+    document.getElementById("zoneInscription");
+
+const formInscription =
+    document.getElementById("formInscription");
+
+const nomEquipeInput =
+    document.getElementById("nomEquipeInput");
+
+const boutonInscription =
+    document.getElementById("boutonInscription");
+
+const statusInscription =
+    document.getElementById("statusInscription");
+
+const interfaceEquipe =
+    document.getElementById("interfaceEquipe");
+
+const scoreEquipe =
+    document.getElementById("scoreEquipe");
+
 const statusEquipe =
     document.getElementById("statusEquipe");
 
@@ -9,34 +30,103 @@ const questionEquipe =
 const propositionsEquipe =
     document.getElementById("propositionsEquipe");
 
-const scoreEquipe =
+const score =
     document.getElementById("score");
 
-const parametres =
-    new URLSearchParams(window.location.search);
+const chronoEquipe =
+    document.getElementById("chronoEquipe");
 
-const nomEquipe =
-    parametres.get("equipe") || "Équipe";
+const nomEquipeDisplay =
+    document.getElementById("nomEquipe");
 
-document.getElementById("nomEquipe").textContent =
-    nomEquipe;
+let nomEquipe = null;
+
+
+interfaceEquipe.style.display = "none";
+scoreEquipe.style.display = "none";
+
 
 socket.on("connect", () => {
     console.log("Équipe connectée au serveur");
-
-    socket.emit("inscription-equipe", nomEquipe);
 });
+
 
 socket.on("disconnect", () => {
     console.log("Équipe déconnectée du serveur");
+
+    if (nomEquipe === null) {
+        statusInscription.textContent =
+            "Connexion au serveur perdue.";
+    }
 });
+
+
+formInscription.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const nomSaisi =
+        nomEquipeInput.value.trim();
+
+    if (nomSaisi.length < 2) {
+        statusInscription.textContent =
+            "Le nom doit contenir au moins 2 caractères.";
+
+        return;
+    }
+
+    boutonInscription.disabled = true;
+
+    statusInscription.textContent =
+        "Inscription en cours...";
+
+    socket.emit(
+        "inscription-equipe",
+        nomSaisi
+    );
+});
+
+
+socket.on("inscription-validee", (donnees) => {
+    nomEquipe = donnees.nom;
+
+    nomEquipeDisplay.textContent =
+        donnees.nom;
+
+    score.textContent =
+        donnees.score;
+
+    zoneInscription.style.display = "none";
+
+    interfaceEquipe.style.display = "block";
+
+    scoreEquipe.style.display = "block";
+
+    statusEquipe.textContent =
+        "Équipe inscrite ! En attente de la partie...";
+
+    console.log(
+        "Équipe inscrite : " +
+        donnees.nom
+    );
+});
+
+
+socket.on("inscription-refusee", (message) => {
+    statusInscription.textContent =
+        message;
+
+    boutonInscription.disabled = false;
+});
+
 
 socket.on("partie-demarree", () => {
     statusEquipe.textContent =
         "La partie est en cours !";
 });
 
+
 socket.on("nouvelle-question", (question) => {
+
     console.log(
         "Question " +
         question.numero +
@@ -44,7 +134,6 @@ socket.on("nouvelle-question", (question) => {
         question.total
     );
 
-    // Réinitialisation de l'affichage
     statusEquipe.textContent =
         "À vous de jouer !";
 
@@ -53,21 +142,31 @@ socket.on("nouvelle-question", (question) => {
 
     propositionsEquipe.innerHTML = "";
 
-    for (let i = 0; i < question.reponses.length; i++) {
-        const bouton = document.createElement("button");
+    for (
+        let i = 0;
+        i < question.reponses.length;
+        i++
+    ) {
+        const bouton =
+            document.createElement("button");
 
         bouton.textContent =
             question.reponses[i];
 
         bouton.addEventListener("click", () => {
-            socket.emit("reponse-equipe", i);
+
+            socket.emit(
+                "reponse-equipe",
+                i
+            );
 
             for (
                 let j = 0;
                 j < propositionsEquipe.children.length;
                 j++
             ) {
-                propositionsEquipe.children[j].disabled = true;
+                propositionsEquipe.children[j].disabled =
+                    true;
             }
 
             statusEquipe.textContent =
@@ -78,42 +177,65 @@ socket.on("nouvelle-question", (question) => {
     }
 });
 
+
 socket.on("resultat-reponse", (resultat) => {
+
     if (resultat.bonne) {
+
         statusEquipe.textContent =
             "✅ Bonne réponse !";
+
     } else {
+
         statusEquipe.textContent =
             "❌ Mauvaise réponse !";
     }
 });
 
-socket.on("score", (score) => {
-    scoreEquipe.textContent = score;
+
+socket.on("score", (nouveauScore) => {
+
+    score.textContent =
+        nouveauScore;
 });
 
+
 socket.on("scores", (scores) => {
-    if (scores[nomEquipe]) {
-        scoreEquipe.textContent =
+
+    if (
+        nomEquipe !== null &&
+        scores[nomEquipe]
+    ) {
+        score.textContent =
             scores[nomEquipe].score;
     }
 });
 
-socket.on("partie-terminee", () => {
-    statusEquipe.textContent =
-        "La partie est terminée !";
-
-    questionEquipe.textContent = "";
-
-    propositionsEquipe.innerHTML = "";
-});
 
 socket.on("chrono", (temps) => {
-    document.getElementById("chronoEquipe").textContent =
+
+    chronoEquipe.textContent =
         temps + " s";
 });
 
+
 socket.on("temps-ecoule", () => {
+
     statusEquipe.textContent =
         "⏱️ Temps écoulé !";
+});
+
+
+socket.on("partie-terminee", () => {
+
+    statusEquipe.textContent =
+        "La partie est terminée !";
+
+    questionEquipe.textContent =
+        "";
+
+    propositionsEquipe.innerHTML = "";
+
+    chronoEquipe.textContent =
+        "—";
 });

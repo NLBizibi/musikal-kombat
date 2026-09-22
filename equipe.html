@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Musikal Kombat - Équipe</title>
+
     <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -14,8 +17,43 @@
         <p id="nomEquipe">Équipe</p>
     </header>
 
-
     <main>
+
+        <section id="zoneInscription">
+
+            <h2>Rejoindre la partie</h2>
+
+            <form id="formInscription">
+
+                <label for="nomEquipeInput">
+                    Nom de l'équipe
+                </label>
+
+                <br>
+
+                <input
+                    id="nomEquipeInput"
+                    type="text"
+                    maxlength="20"
+                    autocomplete="off"
+                    placeholder="Ex : Acabra"
+                    required
+                >
+
+                <br>
+
+                <button id="boutonInscription" type="submit">
+                    Rejoindre
+                </button>
+
+            </form>
+
+            <p id="statusInscription">
+                Entrez le nom de votre équipe.
+            </p>
+
+        </section>
+
 
         <section id="interfaceEquipe">
 
@@ -27,14 +65,7 @@
                 En attente de la question...
             </h2>
 
-            <div id="propositionsEquipe">
-
-                <button>Réponse 1</button>
-                <button>Réponse 2</button>
-                <button>Réponse 3</button>
-                <button>Réponse 4</button>
-
-            </div>
+            <div id="propositionsEquipe"></div>
 
             <p id="chronoEquipe">—</p>
 
@@ -53,6 +84,7 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/equipe.js"></script>
-    
+
 </body>
+
 </html>

@@ -12,25 +12,52 @@ const questionAnimateur =
 const numeroQuestion =
     document.getElementById("numeroQuestion");
 
+const chrono =
+    document.getElementById("chrono");
+
 const equipesDisplay =
     document.getElementById("equipesDisplay");
+
+let listeEquipes = [];
+
+boutonNouvellePartie.disabled = true;
+
 
 socket.on("connect", () => {
     console.log("Animateur connecté au serveur");
 });
 
+
 socket.on("disconnect", () => {
     console.log("Animateur déconnecté du serveur");
 });
 
-boutonNouvellePartie.addEventListener("click", () => {
-    socket.emit("demarrer-partie");
+
+socket.on("liste-equipes", (equipes) => {
+
+    console.log(
+        "Liste des équipes reçue :",
+        equipes
+    );
+
+    listeEquipes = equipes;
+
+    afficherEquipes();
+
+    boutonNouvellePartie.disabled =
+        listeEquipes.length === 0;
+});
+
+
+socket.on("partie-demarree", () => {
 
     statusAnimateur.textContent =
         "La partie est en cours !";
 });
 
+
 socket.on("nouvelle-question", (question) => {
+
     numeroQuestion.textContent =
         "Question " +
         question.numero +
@@ -41,28 +68,34 @@ socket.on("nouvelle-question", (question) => {
         question.texte;
 });
 
+
 socket.on("chrono", (temps) => {
-    document.getElementById("chrono").textContent =
+
+    chrono.textContent =
         temps + " s";
 });
 
+
 socket.on("scores", (scores) => {
-    equipesDisplay.innerHTML = "";
 
-    for (const nomEquipe in scores) {
-        const ligne = document.createElement("p");
+    for (let i = 0; i < listeEquipes.length; i++) {
 
-        ligne.textContent =
-            nomEquipe +
-            " : " +
-            scores[nomEquipe].score +
-            " point(s)";
+        const equipe =
+            listeEquipes[i];
 
-        equipesDisplay.appendChild(ligne);
+        if (scores[equipe.nom]) {
+
+            equipe.score =
+                scores[equipe.nom].score;
+        }
     }
+
+    afficherEquipes();
 });
 
+
 socket.on("partie-terminee", () => {
+
     statusAnimateur.textContent =
         "La partie est terminée !";
 
@@ -71,4 +104,44 @@ socket.on("partie-terminee", () => {
 
     numeroQuestion.textContent =
         "QCM terminé";
+
+    chrono.textContent =
+        "—";
 });
+
+
+boutonNouvellePartie.addEventListener("click", () => {
+
+    socket.emit("demarrer-partie");
+
+    statusAnimateur.textContent =
+        "La partie est en cours !";
+});
+
+
+function afficherEquipes() {
+
+    equipesDisplay.innerHTML = "";
+
+    for (let i = 0; i < listeEquipes.length; i++) {
+
+        const equipe =
+            listeEquipes[i];
+
+        const ligne =
+            document.createElement("p");
+
+        ligne.textContent =
+            equipe.nom +
+            " : " +
+            equipe.score +
+            " point(s) - " +
+            (
+                equipe.connectee
+                    ? "connectée"
+                    : "déconnectée"
+            );
+
+        equipesDisplay.appendChild(ligne);
+    }
+}
