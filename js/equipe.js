@@ -1,43 +1,18 @@
 const socket = io();
-
-const zoneInscription =
-    document.getElementById("zoneInscription");
-
-const formInscription =
-    document.getElementById("formInscription");
-
-const nomEquipeInput =
-    document.getElementById("nomEquipeInput");
-
-const boutonInscription =
-    document.getElementById("boutonInscription");
-
-const statusInscription =
-    document.getElementById("statusInscription");
-
-const interfaceEquipe =
-    document.getElementById("interfaceEquipe");
-
-const scoreEquipe =
-    document.getElementById("scoreEquipe");
-
-const statusEquipe =
-    document.getElementById("statusEquipe");
-
-const questionEquipe =
-    document.getElementById("questionEquipe");
-
-const propositionsEquipe =
-    document.getElementById("propositionsEquipe");
-
-const score =
-    document.getElementById("score");
-
-const chronoEquipe =
-    document.getElementById("chronoEquipe");
-
-const nomEquipeDisplay =
-    document.getElementById("nomEquipe");
+const zoneInscription = document.getElementById("zoneInscription");
+const formInscription = document.getElementById("formInscription");
+const nomEquipeInput = document.getElementById("nomEquipeInput");
+const boutonInscription = document.getElementById("boutonInscription");
+const statusInscription = document.getElementById("statusInscription");
+const interfaceEquipe = document.getElementById("interfaceEquipe");
+const scoreEquipe = document.getElementById("scoreEquipe");
+const statusEquipe = document.getElementById("statusEquipe");
+const questionEquipe = document.getElementById("questionEquipe");
+const propositionsEquipe = document.getElementById("propositionsEquipe");
+const score = document.getElementById("score");
+const chronoEquipe = document.getElementById("chronoEquipe");
+const nomEquipeDisplay = document.getElementById("nomEquipe");
+const boutonBuzzer = document.getElementById("boutonBuzzer");
 
 let nomEquipe = null;
 
@@ -115,175 +90,84 @@ formInscription.addEventListener(
 );
 
 
-socket.on(
-    "inscription-validee",
-    (donnees) => {
+socket.on("inscription-validee", (donnees) => {
+    nomEquipe = donnees.nom;
+    localStorage.setItem("musikalKombatEquipe", nomEquipe);
+    nomEquipeDisplay.textContent = donnees.nom;
+    score.textContent = donnees.score;
+    zoneInscription.style.display = "none";
+    interfaceEquipe.style.display = "block";
+    scoreEquipe.style.display = "block";
+    if (donnees.partieEnCours) {
+        statusEquipe.textContent = "Reconnexion réussie. Vous reprendrez à la prochaine question.";
+    } 
+    else {
+        statusEquipe.textContent = "Équipe inscrite ! En attente de la partie...";
+    }
+        console.log("Équipe inscrite : " + donnees.nom);
+    if (donnees.manche === "sprint") {
+        boutonBuzzer.disabled = false;
+    } 
+    else {
+        boutonBuzzer.disabled = true;
+    }
+});
 
-        nomEquipe =
-            donnees.nom;
-
-        localStorage.setItem(
-            "musikalKombatEquipe",
-            nomEquipe
-        );
-
-        nomEquipeDisplay.textContent =
-            donnees.nom;
-
-        score.textContent =
-            donnees.score;
-
-        zoneInscription.style.display =
-            "none";
-
-        interfaceEquipe.style.display =
-            "block";
-
-        scoreEquipe.style.display =
-            "block";
-
-        if (donnees.partieEnCours) {
-
-            statusEquipe.textContent =
-                "Reconnexion réussie. Vous reprendrez à la prochaine question.";
-
-        } else {
-
-            statusEquipe.textContent =
-                "Équipe inscrite ! En attente de la partie...";
-        }
-
-        console.log(
-            "Équipe inscrite : " +
-            donnees.nom
-        );
+socket.on( "inscription-refusee", (message) => {
+        statusInscription.textContent = message;
+        boutonInscription.disabled = false;
+        zoneInscription.style.display = "block";
+        interfaceEquipe.style.display = "none";
+        scoreEquipe.style.display = "none";
     }
 );
 
-
-socket.on(
-    "inscription-refusee",
-    (message) => {
-
-        statusInscription.textContent =
-            message;
-
-        boutonInscription.disabled =
-            false;
-
-        zoneInscription.style.display =
-            "block";
-
-        interfaceEquipe.style.display =
-            "none";
-
-        scoreEquipe.style.display =
-            "none";
-    }
-);
-
-
-socket.on(
-    "partie-demarree",
-    () => {
-
+socket.on("partie-demarree", () => {
         statusEquipe.textContent =
             "La partie est en cours !";
     }
 );
 
-
-socket.on(
-    "nouvelle-question",
-    (question) => {
-
-        console.log(
-            "Question " +
-            question.numero +
-            " / " +
-            question.total
-        );
-
-        statusEquipe.textContent =
-            "À vous de jouer !";
-
-        questionEquipe.textContent =
-            question.texte;
-
-        propositionsEquipe.innerHTML =
-            "";
-
-        for (
-            let i = 0;
-            i < question.reponses.length;
-            i++
-        ) {
-
-            const bouton =
-                document.createElement("button");
-
-            bouton.textContent =
-                question.reponses[i];
-
-            bouton.addEventListener(
-                "click",
-                () => {
-
-                    socket.emit(
-                        "reponse-equipe",
-                        i
-                    );
-
-                    for (
-                        let j = 0;
-                        j < propositionsEquipe.children.length;
-                        j++
-                    ) {
-
-                        propositionsEquipe.children[j].disabled =
-                            true;
-                    }
-
-                    statusEquipe.textContent =
-                        "Réponse envoyée...";
-                }
-            );
-
-            propositionsEquipe.appendChild(
-                bouton
-            );
-        }
+socket.on("nouvelle-question", (question) => {
+    if (question.manche !== "sprint") {
+        boutonBuzzer.disabled = true;
     }
-);
 
+    console.log("Question " + question.numero + " / " + question.total);
+    statusEquipe.textContent = "À vous de jouer !";
+    questionEquipe.textContent = question.texte;
+    propositionsEquipe.innerHTML = "";
 
-socket.on(
-    "resultat-reponse",
-    (resultat) => {
+    for (let i = 0; i < question.reponses.length; i++) {
+        const bouton = document.createElement("button");
+        bouton.textContent = question.reponses[i];
 
-        if (resultat.bonne) {
+        bouton.addEventListener("click", () => {
+            socket.emit("reponse-equipe", i);
+            for (let j = 0; j < propositionsEquipe.children.length; j++) {
+                propositionsEquipe.children[j].disabled = true;
+            }
 
-            statusEquipe.textContent =
-                "✅ Bonne réponse !";
+            statusEquipe.textContent = "Réponse envoyée...";
+        });
 
-        } else {
-
-            statusEquipe.textContent =
-                "❌ Mauvaise réponse !";
-        }
+        propositionsEquipe.appendChild(bouton);
     }
-);
+});
 
 
-socket.on(
-    "score",
-    (nouveauScore) => {
-
-        score.textContent =
-            nouveauScore;
+socket.on("resultat-reponse", (resultat) => {
+    if (resultat.bonne) {
+        statusEquipe.textContent = "✅ Bonne réponse !";
+    } 
+    else {
+        statusEquipe.textContent = "❌ Mauvaise réponse !";
     }
-);
+});
 
+socket.on("score", (nouveauScore) => {
+        score.textContent = nouveauScore;
+});
 
 socket.on(
     "scores",
@@ -300,41 +184,35 @@ socket.on(
     }
 );
 
-
-socket.on(
-    "chrono",
-    (temps) => {
-
+socket.on("chrono", (temps) => {
         chronoEquipe.textContent =
             temps + " s";
     }
 );
 
-
-socket.on(
-    "temps-ecoule",
-    () => {
-
-        statusEquipe.textContent =
-            "⏱️ Temps écoulé !";
+socket.on("temps-ecoule", () => {
+        statusEquipe.textContent = "⏱️ Temps écoulé !";
     }
 );
 
-
-socket.on(
-    "partie-terminee",
-    () => {
-
-        statusEquipe.textContent =
-            "La partie est terminée !";
-
-        questionEquipe.textContent =
-            "";
-
-        propositionsEquipe.innerHTML =
-            "";
-
-        chronoEquipe.textContent =
-            "—";
+socket.on("manche-changee", (manche) => {
+    console.log("Manche changee reçue : ", manche);
+    if (manche === "sprint") {
+        boutonBuzzer.disabled = false;
+        statusEquipe.textContent = "🔴 SPRINT : à vous de jouer !";
+    } else {
+        boutonBuzzer.disabled = true;
     }
-);
+});
+
+socket.on("partie-terminee", () => {
+    statusEquipe.textContent = "La partie est terminée !";
+    questionEquipe.textContent = "";
+    propositionsEquipe.innerHTML = "";
+    chronoEquipe.textContent = "—";
+});
+
+boutonBuzzer.addEventListener("click", () => {
+    boutonBuzzer.disabled = true;
+    socket.emit("buzzer");
+});

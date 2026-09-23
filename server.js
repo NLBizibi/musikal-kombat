@@ -118,6 +118,43 @@ let partieEnCours = false;
 let chrono = null;
 let tempsRestant = 30;
 let premiereBonneReponse = null;
+let equipeBuzzee = null;
+
+// Manche actuellement jouée
+let mancheActuelle = "qcm";
+
+const ordreManches = [
+    "qcm",
+    "sprint",
+    "combo",
+    "uppercut"
+];
+
+function passerMancheSuivante() {
+
+    const indiceManche =
+        ordreManches.indexOf(mancheActuelle);
+
+    if (indiceManche === -1) {
+        return;
+    }
+
+    if (indiceManche >= ordreManches.length - 1) {
+        console.log("Dernière manche atteinte.");
+        return;
+    }
+
+    mancheActuelle =
+        ordreManches[indiceManche + 1];
+
+    console.log(
+        "Passage à la manche :",
+        mancheActuelle
+    );
+
+    equipeBuzzee = null;
+    io.emit("manche-changee", mancheActuelle);
+}
 
 io.on("connection", (socket) => {
     console.log("Un appareil vient de se connecter");
@@ -125,119 +162,130 @@ io.on("connection", (socket) => {
         "liste-equipes",
         creerListeEquipes()
     );
+    socket.on("passer-manche-suivante", () => {
 
-socket.on("inscription-equipe", (nomEquipe) => {
-
-    if (typeof nomEquipe !== "string") {
-        socket.emit(
-            "inscription-refusee",
-            "Nom d'équipe invalide."
-        );
-
+        if (!partieEnCours) {
         return;
-    }
+        }
 
-    nomEquipe = nomEquipe.trim();
+        passerMancheSuivante();
+    });
 
-    if (partieEnCours) {
+    socket.on("inscription-equipe", (nomEquipe) => {
 
-    if (!equipes[nomEquipe]) {
+        if (typeof nomEquipe !== "string") {
+            socket.emit(
+                "inscription-refusee",
+                "Nom d'équipe invalide."
+            );
 
-        socket.emit(
-            "inscription-refusee",
-            "La partie a déjà commencé."
-        );
+            return;
+        }
 
-        return;
-    }
+        nomEquipe = nomEquipe.trim();
 
-    if (
-        equipes[nomEquipe].connectee &&
-        equipes[nomEquipe].socketId !== socket.id
-    ) {
-
-        socket.emit(
-            "inscription-refusee",
-            "Ce nom d'équipe est déjà connecté."
-        );
-
-        return;
-    }
-}
-
-    if (nomEquipe.length < 2) {
-        socket.emit(
-            "inscription-refusee",
-            "Le nom doit contenir au moins 2 caractères."
-        );
-
-        return;
-    }
-
-    if (nomEquipe.length > 20) {
-        socket.emit(
-            "inscription-refusee",
-            "Le nom doit contenir au maximum 20 caractères."
-        );
-
-        return;
-    }
-
-    if (
-        equipes[nomEquipe] &&
-        equipes[nomEquipe].socketId !== null &&
-        equipes[nomEquipe].socketId !== socket.id
-    ) {
-        socket.emit(
-            "inscription-refusee",
-            "Ce nom d'équipe est déjà utilisé."
-        );
-
-        return;
-    }
-
-    socket.nomEquipe = nomEquipe;
-
-    if (!equipes[nomEquipe]) {
-
-        equipes[nomEquipe] = {
-            score: 0,
-            aRepondu: false,
-            socketId: socket.id,
-            connectee: true
-        };
-
-    } else {
-
-        equipes[nomEquipe].socketId = socket.id;
-        equipes[nomEquipe].connectee = true;
-
-        // Si la reconnexion a lieu pendant une question,
-        // l'équipe reprendra à la question suivante.
         if (partieEnCours) {
-            equipes[nomEquipe].aRepondu = true;
+
+        if (!equipes[nomEquipe]) {
+
+            socket.emit(
+                "inscription-refusee",
+                "La partie a déjà commencé."
+            );
+
+            return;
+        }
+
+        if (
+            equipes[nomEquipe].connectee &&
+            equipes[nomEquipe].socketId !== socket.id
+        ) {
+
+            socket.emit(
+                "inscription-refusee",
+                "Ce nom d'équipe est déjà connecté."
+            );
+
+            return;
         }
     }
+
+        if (nomEquipe.length < 2) {
+            socket.emit(
+                "inscription-refusee",
+                "Le nom doit contenir au moins 2 caractères."
+            );
+
+            return;
+        }
+
+        if (nomEquipe.length > 20) {
+            socket.emit(
+                "inscription-refusee",
+                "Le nom doit contenir au maximum 20 caractères."
+            );
+
+            return;
+        }
+
+        if (
+            equipes[nomEquipe] &&
+            equipes[nomEquipe].socketId !== null &&
+            equipes[nomEquipe].socketId !== socket.id
+        ) {
+            socket.emit(
+                "inscription-refusee",
+                "Ce nom d'équipe est déjà utilisé."
+            );
+
+            return;
+        }
+
+        socket.nomEquipe = nomEquipe;
+
+        if (!equipes[nomEquipe]) {
+
+            equipes[nomEquipe] = {
+                score: 0,
+                aRepondu: false,
+                socketId: socket.id,
+                connectee: true
+            };
+
+        } else {
+
+            equipes[nomEquipe].socketId = socket.id;
+            equipes[nomEquipe].connectee = true;
+
+            // Si la reconnexion a lieu pendant une question,
+            // l'équipe reprendra à la question suivante.
+            if (partieEnCours) {
+                equipes[nomEquipe].aRepondu = true;
+            }
+        }
 
     socket.emit("inscription-validee", {
         nom: nomEquipe,
         score: equipes[nomEquipe].score,
-        partieEnCours: partieEnCours
+        partieEnCours: partieEnCours,
+        manche: mancheActuelle
     });
 
-    io.emit(
-        "liste-equipes",
-        creerListeEquipes()
-    );
+        io.emit(
+            "liste-equipes",
+            creerListeEquipes()
+        );
 
-    console.log(
-        nomEquipe +
-        " est inscrit(e)"
-    );
-});
+        console.log(
+            nomEquipe +
+            " est inscrit(e)"
+        );
+    });
 
     socket.on("demarrer-partie", () => {
+        mancheActuelle = "qcm";
         console.log("La partie est lancée par l'animateur");
+        equipeBuzzee = null;
 
         clearInterval(chrono);
 
@@ -250,6 +298,7 @@ socket.on("inscription-equipe", (nomEquipe) => {
         }
 
         io.emit("partie-demarree");
+        io.emit("manche-changee", mancheActuelle);
         io.emit("scores", equipes);
 
         envoyerQuestion();
@@ -278,19 +327,48 @@ socket.on("inscription-equipe", (nomEquipe) => {
         const bonneReponse =
             reponse === questionActuelle.bonneReponse;
 
-     if (bonneReponse) {
-    equipes[nomEquipe].score++;
+        if (bonneReponse) {
+            equipes[nomEquipe].score++;
 
-    if (premiereBonneReponse === null) {
-        premiereBonneReponse = nomEquipe;
-        equipes[nomEquipe].score++;
+            if (premiereBonneReponse === null) {
+                premiereBonneReponse = nomEquipe;
+                equipes[nomEquipe].score++;
 
-        console.log(
-            nomEquipe +
-            " gagne le point de rapidité !"
-        );
+                console.log(
+                    nomEquipe +
+                    " gagne le point de rapidité !"
+                );
+            }
+        }
+
+        socket.on("buzzer", () => {
+
+    if (!partieEnCours) {
+        return;
     }
-}
+
+    if (mancheActuelle !== "sprint") {
+        return;
+    }
+
+    if (equipeBuzzee !== null) {
+        return;
+    }
+
+    if (!socket.nomEquipe) {
+        return;
+    }
+
+    equipeBuzzee = socket.nomEquipe;
+
+    console.log(
+        "BUZZ !",
+        equipeBuzzee
+    );
+
+    io.emit("buzzer-gagnant", equipeBuzzee);
+
+});
 
         socket.emit("resultat-reponse", {
             bonne: bonneReponse
@@ -360,7 +438,7 @@ socket.on("inscription-equipe", (nomEquipe) => {
 
 function envoyerQuestion() {
     if (indiceQuestion >= questions.length) {
-        terminerPartie();
+        terminerManche();
         return;
     }
     premiereBonneReponse = null;
@@ -374,6 +452,7 @@ function envoyerQuestion() {
     const question = questions[indiceQuestion];
 
     io.emit("nouvelle-question", {
+        manche: mancheActuelle,
         numero: indiceQuestion + 1,
         total: questions.length,
         texte: question.texte,
@@ -429,7 +508,7 @@ function questionSuivante() {
     indiceQuestion++;
 
     if (indiceQuestion >= questions.length) {
-        terminerPartie();
+        terminerManche();
         return;
     }
 
@@ -447,6 +526,18 @@ function terminerPartie() {
 
     console.log("La partie est terminée");
 
+}
+
+function terminerManche() {
+
+    clearInterval(chrono);
+
+    io.emit("manche-terminee", mancheActuelle);
+
+    console.log(
+        "Manche terminée :",
+        mancheActuelle
+    );
 }
 
 function creerListeEquipes() {

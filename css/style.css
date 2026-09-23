@@ -83,6 +83,13 @@ button:disabled {
     font-weight: bold;
 }
 
+#boutonBuzzer {
+    font-size: 2em;
+    font-weight: bold;
+    padding: 25px 50px;
+    margin: 30px auto;
+}
+
 #score {
     font-size: 3em;
     font-weight: bold;
