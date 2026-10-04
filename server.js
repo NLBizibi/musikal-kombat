@@ -215,6 +215,17 @@ function passerMancheSuivante() {
     );
 
     equipeBuzzee = null;
+    if (mancheActuelle === "sprint") {
+        morceauSprint = 1;
+        equipesElimineesSprint = [];
+
+        io.emit("nouveau-morceau-sprint", {
+            numero: morceauSprint,
+            total: nombreMorceauxSprint
+        });
+
+    envoyerMorceauSprintAnimateur();
+    }
     io.emit("manche-changee", mancheActuelle);
 }
 

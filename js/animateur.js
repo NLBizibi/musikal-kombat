@@ -120,7 +120,9 @@ socket.on("buzzer-gagnant", (nomEquipe) => {
 });
 
 socket.on("buzzer-rearme", () => {
-    audioSprint.play();
+    if (!audioSprint.ended) {
+        audioSprint.play();
+    }
     boutonPersonneNeTrouveSprint.disabled = false;
 });
 
