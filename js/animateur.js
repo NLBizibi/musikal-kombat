@@ -2,27 +2,34 @@ const socket = io();
 
 const boutonNouvellePartie =
     document.getElementById("nouvellePartie");
-
 const statusAnimateur =
     document.getElementById("statusAnimateur");
-
 const questionAnimateur =
     document.getElementById("question");
-
 const numeroQuestion =
     document.getElementById("numeroQuestion");
-
 const chrono =
     document.getElementById("chrono");
-
 const equipesDisplay =
     document.getElementById("equipesDisplay");
-
 const mancheAnimateur =
     document.getElementById("manche");
-
 const boutonMancheSuivante =
     document.getElementById("mancheSuivante");
+const boutonBonneReponseSprint =
+    document.getElementById("bonneReponseSprint");
+const boutonMauvaiseReponseSprint =
+    document.getElementById("mauvaiseReponseSprint");
+const boutonTestSprint =
+    document.getElementById("testSprint");
+const morceauSprintAnimateur =
+    document.getElementById("morceauSprintAnimateur");
+const reponseSprintAnimateur =
+    document.getElementById("reponseSprintAnimateur");
+
+boutonTestSprint.addEventListener("click", () => {
+    socket.emit("test-sprint");
+});
 
 let listeEquipes = [];
 
@@ -72,12 +79,44 @@ socket.on("chrono", (temps) => {
         temps + " s";
 });
 
+socket.on("morceau-sprint-animateur", (morceau) => {
+    morceauSprintAnimateur.textContent =
+        "Morceau Sprint " +
+        morceau.numero +
+        " / " +
+        morceau.total;
+
+    reponseSprintAnimateur.textContent =
+        morceau.artiste +
+        " — " +
+        morceau.titre;
+});
+
 socket.on("buzzer-gagnant", (nomEquipe) => {
-    statusAnimateur.textContent = "🔴 BUZZ : " + nomEquipe;
+    statusAnimateur.textContent =
+        "🔴 BUZZ : " + nomEquipe;
+
+    boutonBonneReponseSprint.disabled = false;
+    boutonMauvaiseReponseSprint.disabled = false;
+
     console.log(
         "Équipe ayant buzzé :",
         nomEquipe
     );
+});
+
+boutonBonneReponseSprint.addEventListener("click", () => {
+    boutonBonneReponseSprint.disabled = true;
+    boutonMauvaiseReponseSprint.disabled = true;
+
+    socket.emit("validation-sprint", true);
+});
+
+boutonMauvaiseReponseSprint.addEventListener("click", () => {
+    boutonBonneReponseSprint.disabled = true;
+    boutonMauvaiseReponseSprint.disabled = true;
+
+    socket.emit("validation-sprint", false);
 });
 
 socket.on("scores", (scores) => {

@@ -205,6 +205,42 @@ socket.on("manche-changee", (manche) => {
     }
 });
 
+socket.on("buzzer-gagnant", (nomEquipeGagnante) => {
+    console.log("BUZZER-GAGNANT reçu :", nomEquipeGagnante);
+    console.log("Mon équipe :", nomEquipe);
+    boutonBuzzer.disabled = true;
+
+    if (nomEquipe === nomEquipeGagnante) {
+        statusEquipe.textContent = "🔴 Vous avez buzzé !";
+    } 
+    else {
+        statusEquipe.textContent = "🔴 " + nomEquipeGagnante + " a buzzé !";
+    }
+});
+
+socket.on("buzzer-rearme", (equipesEliminees) => {
+    if (equipesEliminees.includes(nomEquipe)) {
+        boutonBuzzer.disabled = true;
+        statusEquipe.textContent = "❌ Mauvaise réponse. Vous êtes éliminés pour ce morceau.";
+    } 
+    else {
+        boutonBuzzer.disabled = false;
+        statusEquipe.textContent = "🔴 Mauvaise réponse adverse : vous pouvez buzzer !";
+    }
+});
+
+socket.on("nouveau-morceau-sprint", (morceau) => {
+    boutonBuzzer.disabled = false;
+    statusEquipe.textContent = "🔴 Morceau " + morceau.numero + " / " + morceau.total + " : prêt à buzzer !";
+});
+
+socket.on("manche-terminee", (manche) => {
+    if (manche === "sprint") {
+        boutonBuzzer.disabled = true;
+        statusEquipe.textContent = "Sprint terminé ! En attente de la manche suivante...";
+    }
+});
+
 socket.on("partie-terminee", () => {
     statusEquipe.textContent = "La partie est terminée !";
     questionEquipe.textContent = "";

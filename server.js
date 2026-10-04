@@ -111,6 +111,29 @@ const questions = [
     }
 ];
 
+const morceauxSprint = [
+    {
+        titre: "Morceau test 1",
+        artiste: "Artiste test 1"
+    },
+    {
+        titre: "Morceau test 2",
+        artiste: "Artiste test 2"
+    },
+    {
+        titre: "Morceau test 3",
+        artiste: "Artiste test 3"
+    },
+    {
+        titre: "Morceau test 4",
+        artiste: "Artiste test 4"
+    },
+    {
+        titre: "Morceau test 5",
+        artiste: "Artiste test 5"
+    }
+];
+
 const equipes = {};
 
 let indiceQuestion = 0;
@@ -119,6 +142,9 @@ let chrono = null;
 let tempsRestant = 30;
 let premiereBonneReponse = null;
 let equipeBuzzee = null;
+let equipesElimineesSprint = [];
+let morceauSprint = null;
+const nombreMorceauxSprint = morceauxSprint.length;
 
 // Manche actuellement jouée
 let mancheActuelle = "qcm";
@@ -129,6 +155,36 @@ const ordreManches = [
     "combo",
     "uppercut"
 ];
+
+function envoyerMorceauSprintAnimateur() {
+    const morceau = morceauxSprint[morceauSprint - 1];
+
+    io.emit("morceau-sprint-animateur", {
+        numero: morceauSprint,
+        total: nombreMorceauxSprint,
+        titre: morceau.titre,
+        artiste: morceau.artiste
+    });
+}
+
+function morceauSuivantSprint() {
+    morceauSprint++;
+    if (morceauSprint > nombreMorceauxSprint) {
+        terminerManche();
+        return;
+    }
+
+    equipeBuzzee = null;
+    equipesElimineesSprint = [];
+
+    console.log("Sprint - morceau " + morceauSprint + " / " + nombreMorceauxSprint); 
+
+    io.emit("nouveau-morceau-sprint", {
+        numero: morceauSprint,
+        total: nombreMorceauxSprint
+    });
+    envoyerMorceauSprintAnimateur();
+}
 
 function passerMancheSuivante() {
 
@@ -304,32 +360,45 @@ io.on("connection", (socket) => {
         envoyerQuestion();
     });
 
+    socket.on("test-sprint", () => {
+        console.log("MODE TEST : démarrage direct du Sprint");
+
+        clearInterval(chrono);
+
+        partieEnCours = true;
+        mancheActuelle = "sprint";
+        morceauSprint = 1;
+        equipeBuzzee = null;
+        equipesElimineesSprint = [];
+
+        io.emit("partie-demarree");
+        io.emit("manche-changee", mancheActuelle);
+        io.emit("scores", equipes);
+
+        io.emit("nouveau-morceau-sprint", {
+            numero: morceauSprint,
+            total: nombreMorceauxSprint
+        });
+        envoyerMorceauSprintAnimateur();
+    });
+
     socket.on("reponse-equipe", (reponse) => {
         const nomEquipe = socket.nomEquipe;
-
         if (!partieEnCours) {
             return;
         }
-
         if (!nomEquipe || !equipes[nomEquipe]) {
             return;
         }
-
         if (equipes[nomEquipe].aRepondu) {
             return;
         }
-
         equipes[nomEquipe].aRepondu = true;
-
-        const questionActuelle =
-            questions[indiceQuestion];
-
-        const bonneReponse =
-            reponse === questionActuelle.bonneReponse;
+        const questionActuelle = questions[indiceQuestion];
+        const bonneReponse = reponse === questionActuelle.bonneReponse;
 
         if (bonneReponse) {
             equipes[nomEquipe].score++;
-
             if (premiereBonneReponse === null) {
                 premiereBonneReponse = nomEquipe;
                 equipes[nomEquipe].score++;
@@ -340,49 +409,12 @@ io.on("connection", (socket) => {
                 );
             }
         }
-
-        socket.on("buzzer", () => {
-
-    if (!partieEnCours) {
-        return;
-    }
-
-    if (mancheActuelle !== "sprint") {
-        return;
-    }
-
-    if (equipeBuzzee !== null) {
-        return;
-    }
-
-    if (!socket.nomEquipe) {
-        return;
-    }
-
-    equipeBuzzee = socket.nomEquipe;
-
-    console.log(
-        "BUZZ !",
-        equipeBuzzee
-    );
-
-    io.emit("buzzer-gagnant", equipeBuzzee);
-
-});
-
         socket.emit("resultat-reponse", {
             bonne: bonneReponse
         });
 
         io.emit("scores", equipes);
-
-        console.log(
-            nomEquipe +
-            " a répondu " +
-            (reponse + 1) +
-            " : " +
-            (bonneReponse ? "CORRECT" : "INCORRECT")
-        );
+        console.log(nomEquipe + " a répondu " + (reponse + 1) + " : " + (bonneReponse ? "CORRECT" : "INCORRECT"));
 
         if (toutesLesEquipesOntRepondu()) {
             clearInterval(chrono);
@@ -390,48 +422,89 @@ io.on("connection", (socket) => {
         }
     });
 
+    socket.on("buzzer", () => {
+        if (!partieEnCours || mancheActuelle !== "sprint") {
+            return;
+        }
+
+        if (!socket.nomEquipe || equipeBuzzee !== null) {
+            return;
+        }
+
+        if (equipesElimineesSprint.includes(socket.nomEquipe)) {
+            return;
+        }
+
+        equipeBuzzee = socket.nomEquipe;
+
+        console.log("BUZZ !", equipeBuzzee);
+
+        io.emit("buzzer-gagnant", equipeBuzzee);
+    });
+
+    socket.on("validation-sprint", (bonneReponse) => {
+        if (!partieEnCours || mancheActuelle !== "sprint") {
+            return;
+        }
+        if (equipeBuzzee === null) {
+            return;
+        }
+        const nomEquipe = equipeBuzzee;
+        if (bonneReponse === true) {
+            equipes[nomEquipe].score++;
+            console.log(
+                nomEquipe + " gagne 1 point au Sprint"
+            );
+            io.emit("scores", equipes);
+            morceauSuivantSprint();
+        } 
+        else {
+            equipesElimineesSprint.push(nomEquipe);
+            console.log(nomEquipe + " est éliminée pour ce morceau");
+            equipeBuzzee = null;
+
+            const equipesConnectees = Object.keys(equipes).filter(
+            (nom) => equipes[nom].connectee);
+
+            const toutesEliminees = equipesConnectees.every(
+                (nom) => equipesElimineesSprint.includes(nom)
+            );
+
+            if (toutesEliminees) {
+                console.log(
+                    "Toutes les équipes sont éliminées : aucun point."
+                );
+
+                morceauSuivantSprint();
+            } 
+            else {
+                io.emit(
+                    "buzzer-rearme",
+                    equipesElimineesSprint
+                );
+            }          
+        }
+    });
+
     socket.on("disconnect", () => {
-
-        if (
-            socket.nomEquipe &&
-            equipes[socket.nomEquipe] &&
-            equipes[socket.nomEquipe].socketId === socket.id
-        ) {
-
-            equipes[socket.nomEquipe].socketId =
-                null;
-
-            equipes[socket.nomEquipe].connectee =
-                false;
-
+        if (socket.nomEquipe && equipes[socket.nomEquipe] && equipes[socket.nomEquipe].socketId === socket.id) {
+            equipes[socket.nomEquipe].socketId =null;
+            equipes[socket.nomEquipe].connectee =false;
             // Une équipe déconnectée ne doit pas
             // empêcher la progression du jeu.
             if (partieEnCours) {
-
-                equipes[socket.nomEquipe].aRepondu =
-                    true;
-
+                equipes[socket.nomEquipe].aRepondu =true;
                 if (toutesLesEquipesOntRepondu()) {
                     clearInterval(chrono);
                     questionSuivante();
                 }
             }
+            io.emit("liste-equipes", creerListeEquipes());
 
-            io.emit(
-                "liste-equipes",
-                creerListeEquipes()
-            );
-
-            console.log(
-                socket.nomEquipe +
-                " s'est déconnecté"
-            );
-
-        } else {
-
-            console.log(
-                "Un appareil vient de se déconnecter"
-            );
+            console.log(socket.nomEquipe +" s'est déconnecté");
+        } 
+        else {
+            console.log("Un appareil vient de se déconnecter");
         }
     });
 });
