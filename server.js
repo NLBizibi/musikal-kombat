@@ -492,6 +492,19 @@ io.on("connection", (socket) => {
         }
     });
 
+    socket.on("sprint-personne-ne-trouve", () => {
+        if (!partieEnCours || mancheActuelle !== "sprint") {
+            return;
+        }
+        if (equipeBuzzee !== null) {
+            return;
+        }
+        console.log(
+            "Personne ne trouve : passage au morceau suivant"
+        );
+        morceauSuivantSprint();
+    });
+
     socket.on("disconnect", () => {
         if (socket.nomEquipe && equipes[socket.nomEquipe] && equipes[socket.nomEquipe].socketId === socket.id) {
             equipes[socket.nomEquipe].socketId =null;

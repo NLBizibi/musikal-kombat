@@ -30,6 +30,8 @@ const audioSprint =
     document.getElementById("audioSprint");
 const boutonLancerAudioSprint =
     document.getElementById("lancerAudioSprint");
+const boutonPersonneNeTrouveSprint =
+    document.getElementById("personneNeTrouveSprint");
 
 boutonTestSprint.addEventListener("click", () => {
     socket.emit("test-sprint");
@@ -98,12 +100,15 @@ socket.on("morceau-sprint-animateur", (morceau) => {
     
     audioSprint.src = morceau.audio;
     audioSprint.load();
+
+    boutonPersonneNeTrouveSprint.disabled = false;
 });
 
 socket.on("buzzer-gagnant", (nomEquipe) => {
     audioSprint.pause();
-    statusAnimateur.textContent =
-        "🔴 BUZZ : " + nomEquipe;
+    boutonPersonneNeTrouveSprint.disabled = true;
+
+    statusAnimateur.textContent ="🔴 BUZZ : " + nomEquipe;
 
     boutonBonneReponseSprint.disabled = false;
     boutonMauvaiseReponseSprint.disabled = false;
@@ -116,6 +121,7 @@ socket.on("buzzer-gagnant", (nomEquipe) => {
 
 socket.on("buzzer-rearme", () => {
     audioSprint.play();
+    boutonPersonneNeTrouveSprint.disabled = false;
 });
 
 boutonLancerAudioSprint.addEventListener("click", () => {
@@ -135,6 +141,13 @@ boutonMauvaiseReponseSprint.addEventListener("click", () => {
     boutonMauvaiseReponseSprint.disabled = true;
 
     socket.emit("validation-sprint", false);
+});
+
+boutonPersonneNeTrouveSprint.addEventListener("click", () => {
+    audioSprint.pause();
+    boutonPersonneNeTrouveSprint.disabled = true;
+
+    socket.emit("sprint-personne-ne-trouve");
 });
 
 socket.on("scores", (scores) => {
