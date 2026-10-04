@@ -114,23 +114,28 @@ const questions = [
 const morceauxSprint = [
     {
         titre: "Morceau test 1",
-        artiste: "Artiste test 1"
+        artiste: "Artiste test 1",
+        audio: "/audio/sprint/sprint1.mp3"
     },
     {
         titre: "Morceau test 2",
-        artiste: "Artiste test 2"
+        artiste: "Artiste test 2",
+        audio: "/audio/sprint/sprint2.mp3"
     },
     {
         titre: "Morceau test 3",
-        artiste: "Artiste test 3"
+        artiste: "Artiste test 3",
+        audio: "/audio/sprint/sprint3.mp3"
     },
     {
         titre: "Morceau test 4",
-        artiste: "Artiste test 4"
+        artiste: "Artiste test 4",
+        audio: "/audio/sprint/sprint4.mp3"
     },
     {
         titre: "Morceau test 5",
-        artiste: "Artiste test 5"
+        artiste: "Artiste test 5",
+        audio: "/audio/sprint/sprint5.mp3"
     }
 ];
 
@@ -163,7 +168,8 @@ function envoyerMorceauSprintAnimateur() {
         numero: morceauSprint,
         total: nombreMorceauxSprint,
         titre: morceau.titre,
-        artiste: morceau.artiste
+        artiste: morceau.artiste,
+        audio: morceau.audio
     });
 }
 

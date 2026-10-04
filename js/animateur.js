@@ -26,10 +26,15 @@ const morceauSprintAnimateur =
     document.getElementById("morceauSprintAnimateur");
 const reponseSprintAnimateur =
     document.getElementById("reponseSprintAnimateur");
+const audioSprint =
+    document.getElementById("audioSprint");
+const boutonLancerAudioSprint =
+    document.getElementById("lancerAudioSprint");
 
 boutonTestSprint.addEventListener("click", () => {
     socket.emit("test-sprint");
 });
+
 
 let listeEquipes = [];
 
@@ -90,9 +95,13 @@ socket.on("morceau-sprint-animateur", (morceau) => {
         morceau.artiste +
         " — " +
         morceau.titre;
+    
+    audioSprint.src = morceau.audio;
+    audioSprint.load();
 });
 
 socket.on("buzzer-gagnant", (nomEquipe) => {
+    audioSprint.pause();
     statusAnimateur.textContent =
         "🔴 BUZZ : " + nomEquipe;
 
@@ -103,6 +112,15 @@ socket.on("buzzer-gagnant", (nomEquipe) => {
         "Équipe ayant buzzé :",
         nomEquipe
     );
+});
+
+socket.on("buzzer-rearme", () => {
+    audioSprint.play();
+});
+
+boutonLancerAudioSprint.addEventListener("click", () => {
+    audioSprint.currentTime = 0;
+    audioSprint.play();
 });
 
 boutonBonneReponseSprint.addEventListener("click", () => {
