@@ -32,6 +32,24 @@ const boutonLancerAudioSprint =
     document.getElementById("lancerAudioSprint");
 const boutonPersonneNeTrouveSprint =
     document.getElementById("personneNeTrouveSprint");
+const boutonAfficherClassement =
+    document.getElementById("afficherClassement");
+
+let classementAffiche = false;
+
+boutonAfficherClassement.addEventListener("click", () => {
+    classementAffiche = !classementAffiche;
+
+    socket.emit(
+        "affichage-classement",
+        classementAffiche
+    );
+
+    boutonAfficherClassement.textContent =
+        classementAffiche
+            ? "🎮 Revenir au jeu"
+            : "🏆 Afficher le classement";
+});
 
 boutonTestSprint.addEventListener("click", () => {
     socket.emit("test-sprint");
@@ -184,15 +202,42 @@ boutonMancheSuivante.addEventListener("click", () => {
 
 function afficherEquipes() {
     equipesDisplay.innerHTML = "";
+
     for (let i = 0; i < listeEquipes.length; i++) {
         const equipe = listeEquipes[i];
+
         const ligne = document.createElement("p");
-        ligne.textContent = equipe.nom + " : " + equipe.score + " point(s) - " +
-            (
-                equipe.connectee
-                    ? "connectée"
-                    : "déconnectée"
-            );
+
+        const infos = document.createElement("span");
+        infos.textContent =
+            equipe.nom +
+            " : " +
+            equipe.score +
+            " point(s) - " +
+            (equipe.connectee ? "connectée" : "déconnectée");
+
+        const boutonPlus = document.createElement("button");
+        boutonPlus.textContent = "+1";
+        boutonPlus.addEventListener("click", () => {
+            socket.emit("modifier-score", {
+                nomEquipe: equipe.nom,
+                modification: 1
+            });
+        });
+
+        const boutonMoins = document.createElement("button");
+        boutonMoins.textContent = "−1";
+        boutonMoins.addEventListener("click", () => {
+            socket.emit("modifier-score", {
+                nomEquipe: equipe.nom,
+                modification: -1
+            });
+        });
+
+        ligne.appendChild(infos);
+        ligne.appendChild(boutonPlus);
+        ligne.appendChild(boutonMoins);
+
         equipesDisplay.appendChild(ligne);
     }
 }

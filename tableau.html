@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Musikal Kombat - Écran</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <main id="ecranJeu">
+        <h1>🥊 MUSIKAL KOMBAT 🥊</h1>
+
+        <h2 id="mancheEcran">
+            En attente de la partie...
+        </h2>
+
+        <p id="progressionEcran"></p>
+        <div id="progressionPartie">
+            <span id="etapeQcm">QCM ○</span>
+            <span> ─── </span>
+            <span id="etapeSprint">SPRINT ○</span>
+            <span> ─── </span>
+            <span id="etapeCombo">COMBO ○</span>
+            <span> ─── </span>
+            <span id="etapeUppercut">UPPERCUT ○</span>
+        </div>
+
+        <section id="zoneQCM">
+            <h2 id="questionEcran"></h2>
+
+            <div id="reponsesEcran"></div>
+
+            <p id="chronoEcran"></p>
+        </section>
+
+        <section id="zoneClassement" hidden>
+            <h2>🏆 Classement</h2>
+
+            <div id="classementEcran"></div>
+</section>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/tableau.js"></script>
+</body>
+</html>

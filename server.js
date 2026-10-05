@@ -377,6 +377,10 @@ io.on("connection", (socket) => {
         envoyerQuestion();
     });
 
+    socket.on("affichage-classement", (afficher) => {
+        io.emit("affichage-classement", afficher);
+    });
+
     socket.on("test-sprint", () => {
         console.log("MODE TEST : démarrage direct du Sprint");
 
@@ -437,6 +441,28 @@ io.on("connection", (socket) => {
             clearInterval(chrono);
             questionSuivante();
         }
+    });
+
+    socket.on("modifier-score", (donnees) => {
+        const nomEquipe = donnees.nomEquipe;
+        const modification = donnees.modification;
+
+        if (!equipes[nomEquipe]) {
+            return;
+        }
+        if (modification !== 1 && modification !== -1) {
+            return;
+        }
+        equipes[nomEquipe].score += modification;
+
+        console.log(
+            "Score manuel :",
+            nomEquipe,
+            modification > 0 ? "+1" : "-1",
+            "→",
+            equipes[nomEquipe].score
+        );
+        io.emit("scores", equipes);
     });
 
     socket.on("buzzer", () => {
