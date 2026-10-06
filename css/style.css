@@ -94,3 +94,72 @@ button:disabled {
     font-size: 3em;
     font-weight: bold;
 }
+
+/* =========================
+   TABLEAU D'AFFICHAGE
+   ========================= */
+
+.tableau {
+    text-align: center;
+    font-size: 2rem;
+}
+
+.tableau h1 {
+    font-size: 4rem;
+    margin: 20px 0;
+}
+
+.tableau #mancheEcran {
+    font-size: 3rem;
+    margin: 20px 0;
+}
+
+.tableau #progressionEcran {
+    font-size: 2.5rem;
+    margin: 20px 0;
+}
+
+.tableau #progressionPartie {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+
+    width: 100%;
+
+    font-size: 1.8rem;
+    font-weight: bold;
+    text-align: center;
+
+    padding: 15px 0;
+    margin: 0;
+
+    background-color: white;
+}
+
+.tableau #questionEcran {
+    font-size: 3rem;
+    margin: 40px 0;
+}
+
+.tableau #reponsesEcran {
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+.tableau #reponsesEcran p {
+    margin: 30px 0;
+}
+
+.tableau #chronoEcran {
+    font-size: 4rem;
+    font-weight: bold;
+    margin: 40px 0;
+}
+
+.tableau #zoneClassement h2 {
+    font-size: 4rem;
+}
+
+.tableau #classementEcran {
+    font-size: 3rem;
+}

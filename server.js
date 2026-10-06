@@ -10,131 +10,131 @@ app.use(express.static("."));
 
 const questions = [
     {
-        texte: "Qui a interprété Encore un matin ?",
+        question: "Qui interprète cet extrait ?",
         reponses: [
-            "Jean-Pierre Mader",
-            "Jean-Jacques Goldman",
-            "Daniel Balavoine",
-            "Johnny Hallyday"
+            "Jeanne Mas",
+            "Desireless",
+            "Lio",
+            "Julie Pietri"
         ],
         bonneReponse: 1
     },
     {
-        texte: "Qui a chanté Gigi l'Amoroso ?",
+        question: "Quel groupe interprète cet extrait ?",
         reponses: [
-            "Michèle Torr",
-            "Mireille Mathieu",
-            "Dalida",
-            "France Gall"
+            "Architects",
+            "While She Sleeps",
+            "LANDMVRKS",
+            "Bring Me The Horizon"
         ],
         bonneReponse: 2
     },
     {
-        texte: "Qui chante La Bohème ?",
+        question: "Quel groupe interprète cet extrait ?",
         reponses: [
-            "Charles Aznavour",
-            "Georges Brassens",
-            "Serge Gainsbourg",
-            "Jacques Brel"
-        ],
-        bonneReponse: 0
-    },
-    {
-        texte: "Quel groupe a chanté L'Aventurier ?",
-        reponses: [
-            "Téléphone",
-            "Indochine",
+            "Images",
+            "Début de Soirée",
             "Gold",
             "Partenaire Particulier"
         ],
+        bonneReponse: 0
+    },
+    {
+        question: "Quel groupe interprète cet extrait ?",
+        reponses: [
+            "All Saints",
+            "Destiny's Child",
+            "TLC",
+            "Spice Girls"
+        ],
+        bonneReponse: 3
+    },
+    {
+        question: "Qui interprète cet extrait ?",
+        reponses: [
+            "Corona",
+            "Gala",
+            "Haddaway",
+            "Snap!"
+        ],
         bonneReponse: 1
     },
     {
-        texte: "Qui chante Je te donne ?",
+        question: "Quel groupe interprète cet extrait ?",
         reponses: [
-            "Jean-Jacques Goldman",
-            "Francis Cabrel",
-            "Michel Berger",
-            "Renaud"
+            "New Radicals",
+            "The Verve",
+            "Semisonic",
+            "Spin Doctors"
         ],
         bonneReponse: 0
     },
     {
-        texte: "Qui a chanté Comme d'habitude ?",
+        question: "Quel groupe interprète cet extrait ?",
         reponses: [
-            "Claude François",
-            "Joe Dassin",
-            "Michel Sardou",
-            "Alain Barrière"
+            "O-Zone",
+            "Aqua",
+            "Eiffel 65",
+            "Las Ketchup"
         ],
         bonneReponse: 0
     },
     {
-        texte: "Quel groupe chante Le vent nous portera ?",
+        question: "Qui interprète cet extrait ?",
         reponses: [
-            "Noir Désir",
-            "Louise Attaque",
-            "Mano Negra",
-            "Indochine"
-        ],
-        bonneReponse: 0
-    },
-    {
-        texte: "Qui chante Alexandrie Alexandra ?",
-        reponses: [
-            "Claude François",
-            "Patrick Juvet",
-            "Daniel Balavoine",
-            "Michel Delpech"
-        ],
-        bonneReponse: 0
-    },
-    {
-        texte: "Qui interprète Mistral gagnant ?",
-        reponses: [
-            "Renaud",
-            "Francis Cabrel",
-            "Alain Souchon",
-            "Maxime Le Forestier"
-        ],
-        bonneReponse: 0
-    },
-    {
-        texte: "Qui chante Pour que tu m'aimes encore ?",
-        reponses: [
-            "Patricia Kaas",
-            "Céline Dion",
-            "Lara Fabian",
-            "Julie Zenatti"
+            "Angèle",
+            "Stromae",
+            "Orelsan",
+            "Maître Gims"
         ],
         bonneReponse: 1
+    },
+    {
+        question: "Quel groupe interprète cet extrait ?",
+        reponses: [
+            "Stardust",
+            "Modjo",
+            "Cassius",
+            "Superfunk"
+        ],
+        bonneReponse: 1
+    },
+    {
+        question: "Qui interprète cet extrait ?",
+        reponses: [
+            "Dua Lipa",
+            "Lady Gaga",
+            "Katy Perry",
+            "Miley Cyrus"
+        ],
+        bonneReponse: 3
     }
 ];
 
 const morceauxSprint = [
     {
-        titre: "Morceau test 1",
-        artiste: "Artiste test 1",
+        titre: "Tu ne m'as pas laissé le temps",
+        artiste: "David Hallyday",
         audio: "/audio/sprint/sprint1.mp3"
     },
     {
-        titre: "Morceau test 2",
-        artiste: "Artiste test 2",
+        titre: "Where I'm Headed",
+        artiste: "Lene Marlin",
         audio: "/audio/sprint/sprint2.mp3"
     },
     {
-        titre: "Morceau test 3",
-        artiste: "Artiste test 3",
+        titre: "Mambo N. 5",
+        artiste: "Lou Bega",
         audio: "/audio/sprint/sprint3.mp3"
     },
     {
-        titre: "Morceau test 4",
-        artiste: "Artiste test 4",
+        titre: "Mais qui est la Belette ?",
+        artiste: "Manau",
         audio: "/audio/sprint/sprint4.mp3"
     },
     {
-        titre: "Morceau test 5",
-        artiste: "Artiste test 5",
+        titre: "Livin' la vida loca",
+        artiste: "Ricky Martin",
         audio: "/audio/sprint/sprint5.mp3"
     }
 ];
@@ -443,6 +443,14 @@ io.on("connection", (socket) => {
         }
     });
 
+    socket.on("question-suivante-qcm", () => {
+        if (!partieEnCours || mancheActuelle !== "qcm") {
+            return;
+        }
+
+        envoyerQuestion();
+    });
+
     socket.on("modifier-score", (donnees) => {
         const nomEquipe = donnees.nomEquipe;
         const modification = donnees.modification;
@@ -469,19 +477,15 @@ io.on("connection", (socket) => {
         if (!partieEnCours || mancheActuelle !== "sprint") {
             return;
         }
-
         if (!socket.nomEquipe || equipeBuzzee !== null) {
             return;
         }
-
         if (equipesElimineesSprint.includes(socket.nomEquipe)) {
             return;
         }
 
         equipeBuzzee = socket.nomEquipe;
-
         console.log("BUZZ !", equipeBuzzee);
-
         io.emit("buzzer-gagnant", equipeBuzzee);
     });
 
@@ -594,7 +598,6 @@ function envoyerQuestion() {
 
     chrono = setInterval(() => {
         tempsRestant--;
-
         io.emit("chrono", tempsRestant);
 
         if (tempsRestant === 0) {
@@ -603,9 +606,7 @@ function envoyerQuestion() {
             for (const nomEquipe in equipes) {
                 equipes[nomEquipe].aRepondu = true;
             }
-
             io.emit("temps-ecoule");
-
             questionSuivante();
         }
     }, 1000);
@@ -619,17 +620,14 @@ function envoyerQuestion() {
 
 function toutesLesEquipesOntRepondu() {
     const noms = Object.keys(equipes);
-
     if (noms.length === 0) {
         return false;
     }
-
     for (let i = 0; i < noms.length; i++) {
         if (!equipes[noms[i]].aRepondu) {
             return false;
         }
     }
-
     return true;
 }
 
@@ -641,28 +639,24 @@ function questionSuivante() {
         return;
     }
 
-    setTimeout(() => {
-        envoyerQuestion();
-    }, 1000);
+    console.log(
+        "Question terminée. En attente de l'animateur."
+    );
+
+    io.emit("qcm-attente-question-suivante");
 }
 
 function terminerPartie() {
     clearInterval(chrono);
     partieEnCours = false;
-
     io.emit("partie-terminee");
     io.emit("scores", equipes);
-
     console.log("La partie est terminée");
-
 }
 
 function terminerManche() {
-
     clearInterval(chrono);
-
     io.emit("manche-terminee", mancheActuelle);
-
     console.log(
         "Manche terminée :",
         mancheActuelle
@@ -670,18 +664,14 @@ function terminerManche() {
 }
 
 function creerListeEquipes() {
-
     const liste = [];
-
     for (const nomEquipe in equipes) {
-
         liste.push({
             nom: nomEquipe,
             score: equipes[nomEquipe].score,
             connectee: equipes[nomEquipe].connectee
         });
     }
-
     return liste;
 }
 

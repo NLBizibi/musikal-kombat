@@ -34,6 +34,8 @@ const boutonPersonneNeTrouveSprint =
     document.getElementById("personneNeTrouveSprint");
 const boutonAfficherClassement =
     document.getElementById("afficherClassement");
+const boutonQuestionSuivanteQcm =
+    document.getElementById("questionSuivanteQcm");
 
 let classementAffiche = false;
 
@@ -97,6 +99,15 @@ socket.on("nouvelle-question", (question) => {
     mancheAnimateur.textContent = "Manche : " + question.manche.toUpperCase();
     numeroQuestion.textContent = "Question " + question.numero + " / " + question.total;
     questionAnimateur.textContent = question.texte;
+});
+socket.on("qcm-attente-question-suivante", () => {
+    boutonQuestionSuivanteQcm.disabled = false;
+});
+
+boutonQuestionSuivanteQcm.addEventListener("click", () => {
+    boutonQuestionSuivanteQcm.disabled = true;
+
+    socket.emit("question-suivante-qcm");
 });
 
 socket.on("chrono", (temps) => {
