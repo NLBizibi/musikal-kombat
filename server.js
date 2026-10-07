@@ -143,6 +143,7 @@ const equipes = {};
 
 let indiceQuestion = 0;
 let partieEnCours = false;
+let questionEnCours = false;
 let chrono = null;
 let tempsRestant = 30;
 let premiereBonneReponse = null;
@@ -405,7 +406,7 @@ io.on("connection", (socket) => {
 
     socket.on("reponse-equipe", (reponse) => {
         const nomEquipe = socket.nomEquipe;
-        if (!partieEnCours) {
+        if (!partieEnCours || mancheActuelle !== "qcm" ||!questionEnCours) {
             return;
         }
         if (!nomEquipe || !equipes[nomEquipe]) {
@@ -552,7 +553,7 @@ io.on("connection", (socket) => {
             equipes[socket.nomEquipe].connectee =false;
             // Une équipe déconnectée ne doit pas
             // empêcher la progression du jeu.
-            if (partieEnCours) {
+            if (partieEnCours && mancheActuelle === "qcm" && questionEnCours) {
                 equipes[socket.nomEquipe].aRepondu =true;
                 if (toutesLesEquipesOntRepondu()) {
                     clearInterval(chrono);
@@ -574,11 +575,14 @@ function envoyerQuestion() {
         terminerManche();
         return;
     }
+    questionEnCours = true;
     premiereBonneReponse = null;
 
     for (const nomEquipe in equipes) {
         equipes[nomEquipe].aRepondu = false;
     }
+
+    
 
     tempsRestant = 30;
 
@@ -632,6 +636,11 @@ function toutesLesEquipesOntRepondu() {
 }
 
 function questionSuivante() {
+    if (!questionEnCours) {
+        return;
+    }
+
+    questionEnCours = false;
     indiceQuestion++;
 
     if (indiceQuestion >= questions.length) {
