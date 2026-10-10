@@ -150,6 +150,7 @@ let premiereBonneReponse = null;
 let equipeBuzzee = null;
 let equipesElimineesSprint = [];
 let morceauSprint = null;
+let questionPrete = false;
 const nombreMorceauxSprint = morceauxSprint.length;
 
 // Manche actuellement jouée
@@ -260,29 +261,29 @@ io.on("connection", (socket) => {
 
         if (partieEnCours) {
 
-        if (!equipes[nomEquipe]) {
+            if (!equipes[nomEquipe]) {
 
-            socket.emit(
-                "inscription-refusee",
-                "La partie a déjà commencé."
-            );
+                socket.emit(
+                    "inscription-refusee",
+                    "La partie a déjà commencé."
+                );
 
-            return;
+                return;
+            }
+
+            if (
+                equipes[nomEquipe].connectee &&
+                equipes[nomEquipe].socketId !== socket.id
+            ) {
+
+                socket.emit(
+                    "inscription-refusee",
+                    "Ce nom d'équipe est déjà connecté."
+                );
+
+                return;
+            }
         }
-
-        if (
-            equipes[nomEquipe].connectee &&
-            equipes[nomEquipe].socketId !== socket.id
-        ) {
-
-            socket.emit(
-                "inscription-refusee",
-                "Ce nom d'équipe est déjà connecté."
-            );
-
-            return;
-        }
-    }
 
         if (nomEquipe.length < 2) {
             socket.emit(
@@ -291,7 +292,7 @@ io.on("connection", (socket) => {
             );
 
             return;
-        }
+        }   
 
         if (nomEquipe.length > 20) {
             socket.emit(
@@ -326,24 +327,45 @@ io.on("connection", (socket) => {
                 connectee: true
             };
 
-        } else {
+        } 
+        else {
 
             equipes[nomEquipe].socketId = socket.id;
             equipes[nomEquipe].connectee = true;
 
             // Si la reconnexion a lieu pendant une question,
             // l'équipe reprendra à la question suivante.
-            if (partieEnCours) {
-                equipes[nomEquipe].aRepondu = true;
+            if (partieEnCours && mancheActuelle === "qcm") {
+                if (questionEnCours && questionPrete) {
+                    // La question est préparée, mais pas encore lancée.
+                    equipes[nomEquipe].aRepondu = false;
+                } else {
+                    // On conserve la règle actuelle pour les autres situations.
+                    equipes[nomEquipe].aRepondu = true;
+                }
             }
         }
 
-    socket.emit("inscription-validee", {
-        nom: nomEquipe,
-        score: equipes[nomEquipe].score,
-        partieEnCours: partieEnCours,
-        manche: mancheActuelle
-    });
+        socket.emit("inscription-validee", {
+            nom: nomEquipe,
+            score: equipes[nomEquipe].score,
+            partieEnCours: partieEnCours,
+            manche: mancheActuelle
+        });
+
+        if (partieEnCours && mancheActuelle === "qcm" && questionEnCours) {
+            const question = questions[indiceQuestion];
+
+            socket.emit("nouvelle-question", {
+                manche: mancheActuelle,
+                numero: indiceQuestion + 1,
+                total: questions.length,
+                texte: question.texte,
+                reponses: question.reponses
+            });
+
+            socket.emit("chrono", tempsRestant);
+        }
 
         io.emit(
             "liste-equipes",
@@ -406,7 +428,7 @@ io.on("connection", (socket) => {
 
     socket.on("reponse-equipe", (reponse) => {
         const nomEquipe = socket.nomEquipe;
-        if (!partieEnCours || mancheActuelle !== "qcm" ||!questionEnCours) {
+        if (!partieEnCours || mancheActuelle !== "qcm" ||!questionEnCours || questionPrete) {
             return;
         }
         if (!nomEquipe || !equipes[nomEquipe]) {
@@ -449,7 +471,17 @@ io.on("connection", (socket) => {
             return;
         }
 
-        envoyerQuestion();
+        demarrerChronoQcm();
+    });
+
+    socket.on("demarrer-question-qcm", () => {
+        console.log("Demande de démarrage QCM reçue");
+
+        if (!partieEnCours || mancheActuelle !== "qcm") {
+            return;
+        }
+
+        demarrerChronoQcm();
     });
 
     socket.on("modifier-score", (donnees) => {
@@ -576,6 +608,7 @@ function envoyerQuestion() {
         return;
     }
     questionEnCours = true;
+    questionPrete = true;
     premiereBonneReponse = null;
 
     for (const nomEquipe in equipes) {
@@ -597,6 +630,21 @@ function envoyerQuestion() {
     });
 
     io.emit("chrono", tempsRestant);
+    clearInterval(chrono);
+
+    console.log(
+        "Question " +
+        (indiceQuestion + 1) +
+        " envoyée"
+    );
+}
+function demarrerChronoQcm() {
+    if (!questionPrete || !questionEnCours) {
+        return;
+    }
+
+    questionPrete = false;
+    io.emit("qcm-question-demarree");
 
     clearInterval(chrono);
 
@@ -604,22 +652,17 @@ function envoyerQuestion() {
         tempsRestant--;
         io.emit("chrono", tempsRestant);
 
-        if (tempsRestant === 0) {
+        if (tempsRestant <= 0) {
             clearInterval(chrono);
 
             for (const nomEquipe in equipes) {
                 equipes[nomEquipe].aRepondu = true;
             }
+
             io.emit("temps-ecoule");
             questionSuivante();
         }
     }, 1000);
-
-    console.log(
-        "Question " +
-        (indiceQuestion + 1) +
-        " envoyée"
-    );
 }
 
 function toutesLesEquipesOntRepondu() {

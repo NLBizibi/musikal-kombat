@@ -36,6 +36,10 @@ const boutonAfficherClassement =
     document.getElementById("afficherClassement");
 const boutonQuestionSuivanteQcm =
     document.getElementById("questionSuivanteQcm");
+const audioQcm = 
+    document.getElementById("lecteur-qcm");
+const boutonLancerAudioQcm =
+    document.getElementById("lancerAudioQcm");
 
 let classementAffiche = false;
 
@@ -99,7 +103,16 @@ socket.on("nouvelle-question", (question) => {
     mancheAnimateur.textContent = "Manche : " + question.manche.toUpperCase();
     numeroQuestion.textContent = "Question " + question.numero + " / " + question.total;
     questionAnimateur.textContent = question.texte;
+    boutonLancerAudioQcm.disabled = false;
+
+    // Charger l'extrait correspondant à la question
+    audioQcm.pause();
+    audioQcm.src = "/audio/qcm/qcm" + question.numero + ".mp3";
+    audioQcm.load();
+
+    console.log("Audio QCM chargé :", audioQcm.src);
 });
+
 socket.on("qcm-attente-question-suivante", () => {
     boutonQuestionSuivanteQcm.disabled = false;
 });
@@ -209,6 +222,16 @@ boutonNouvellePartie.addEventListener("click", () => {
 boutonMancheSuivante.addEventListener("click", () => {
     boutonMancheSuivante.disabled = true;
     socket.emit("passer-manche-suivante");
+});
+
+boutonLancerAudioQcm.addEventListener("click", () => {
+    boutonLancerAudioQcm.disabled = true;
+    socket.emit("demarrer-question-qcm");
+});
+
+socket.on("qcm-question-demarree", () => {
+    audioQcm.currentTime = 0;
+    audioQcm.play();
 });
 
 function afficherEquipes() {
