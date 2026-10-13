@@ -231,7 +231,10 @@ boutonLancerAudioQcm.addEventListener("click", () => {
 
 socket.on("qcm-question-demarree", () => {
     audioQcm.currentTime = 0;
-    audioQcm.play();
+
+    audioQcm.play().catch((erreur) => {
+        console.warn("Lecture audio impossible :", erreur.message);
+    });
 });
 
 function afficherEquipes() {

@@ -471,7 +471,9 @@ io.on("connection", (socket) => {
             return;
         }
 
-        demarrerChronoQcm();
+        if (!questionEnCours && indiceQuestion < questions.length) {
+            envoyerQuestion();
+        }
     });
 
     socket.on("demarrer-question-qcm", () => {
