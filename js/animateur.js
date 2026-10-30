@@ -22,6 +22,7 @@ const boutonMauvaiseReponseSprint =
     document.getElementById("mauvaiseReponseSprint");
 const boutonTestSprint =
     document.getElementById("testSprint");
+const boutonTestCombo = document.getElementById("testCombo");
 const morceauSprintAnimateur =
     document.getElementById("morceauSprintAnimateur");
 const reponseSprintAnimateur =
@@ -40,6 +41,15 @@ const audioQcm =
     document.getElementById("lecteur-qcm");
 const boutonLancerAudioQcm =
     document.getElementById("lancerAudioQcm");
+const infosCombo = document.getElementById("infosCombo");
+const morceauComboAnimateur =
+    document.getElementById("morceauComboAnimateur");
+const chronoComboAnimateur =
+    document.getElementById("chronoComboAnimateur");
+const boutonLancerMorceauCombo =
+    document.getElementById("lancerMorceauCombo");
+const statusComboAnimateur =
+    document.getElementById("statusComboAnimateur");
 
 let classementAffiche = false;
 
@@ -61,6 +71,9 @@ boutonTestSprint.addEventListener("click", () => {
     socket.emit("test-sprint");
 });
 
+boutonTestCombo.addEventListener("click", () => {
+    socket.emit("test-combo");
+});
 
 let listeEquipes = [];
 
@@ -76,8 +89,19 @@ socket.on("disconnect", () => {
 });
 
 socket.on("manche-changee", (manche) => {
-    mancheAnimateur.textContent = "Manche : " + manche.toUpperCase();
-    statusAnimateur.textContent = "Manche " + manche.toUpperCase();
+
+    mancheAnimateur.textContent =
+        "Manche : " + manche.toUpperCase();
+
+    statusAnimateur.textContent =
+        "Manche " + manche.toUpperCase();
+
+    infosCombo.style.display =
+        manche === "combo" ? "block" : "none";
+
+    if (manche !== "combo") {
+        boutonLancerMorceauCombo.disabled = true;
+    }
 });
 
 socket.on("manche-terminee", (manche) => {
@@ -96,7 +120,7 @@ socket.on("liste-equipes", (equipes) => {
 
 socket.on("partie-demarree", () => {
     statusAnimateur.textContent = "La partie est en cours !";
-    boutonMancheSuivante.disabled = true;
+    boutonMancheSuivante.disabled = false;
 });
 
 socket.on("nouvelle-question", (question) => {
@@ -129,6 +153,7 @@ socket.on("chrono", (temps) => {
 });
 
 socket.on("morceau-sprint-animateur", (morceau) => {
+    console.log("Morceau reçu par animateur :", morceau);
     morceauSprintAnimateur.textContent =
         "Morceau Sprint " +
         morceau.numero +
@@ -169,8 +194,13 @@ socket.on("buzzer-rearme", () => {
 });
 
 boutonLancerAudioSprint.addEventListener("click", () => {
+    console.log("Source Sprint :", audioSprint.src);
+
     audioSprint.currentTime = 0;
-    audioSprint.play();
+
+    audioSprint.play().catch((erreur) => {
+        console.error("Erreur lecture Sprint :", erreur);
+    });
 });
 
 boutonBonneReponseSprint.addEventListener("click", () => {
@@ -235,6 +265,70 @@ socket.on("qcm-question-demarree", () => {
     audioQcm.play().catch((erreur) => {
         console.warn("Lecture audio impossible :", erreur.message);
     });
+});
+
+// Préparation d'un morceau Combo
+
+socket.on("combo-morceau-prepare", (morceau) => {
+
+    infosCombo.style.display = "block";
+
+    morceauComboAnimateur.textContent =
+        "Morceau " + morceau.numero + " / " + morceau.total;
+
+    chronoComboAnimateur.textContent =
+        morceau.temps + " s";
+
+    boutonLancerMorceauCombo.disabled = false;
+
+    statusComboAnimateur.textContent =
+        "Morceau prêt. En attente du lancement.";
+});
+
+
+// Lancement du morceau par l'animateur
+
+boutonLancerMorceauCombo.addEventListener("click", () => {
+
+    boutonLancerMorceauCombo.disabled = true;
+
+    socket.emit("demarrer-morceau-combo");
+});
+
+
+// Confirmation du démarrage
+
+socket.on("combo-demarre", (donnees) => {
+
+    boutonLancerMorceauCombo.disabled = true;
+
+    chronoComboAnimateur.textContent =
+        donnees.temps + " s";
+
+    statusComboAnimateur.textContent =
+        "Réponses ouvertes !";
+});
+
+
+// Actualisation du chronomètre
+
+socket.on("combo-chrono", (temps) => {
+
+    chronoComboAnimateur.textContent =
+        temps + " s";
+});
+
+
+// Fin du temps
+
+socket.on("combo-temps-ecoule", () => {
+
+    boutonLancerMorceauCombo.disabled = true;
+
+    chronoComboAnimateur.textContent = "0 s";
+
+    statusComboAnimateur.textContent =
+        "Temps écoulé. Réponses verrouillées.";
 });
 
 function afficherEquipes() {

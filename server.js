@@ -1,6 +1,13 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
+const {
+    enregistrerReponse,
+    enregistrerCorrection,
+    reponsesCombo,
+    correctionsCombo,
+    calculerScoreFinalCombo
+} = require("./modules/combo");
 
 const app = express();
 const serveur = http.createServer(app);
@@ -10,132 +17,82 @@ app.use(express.static("."));
 
 const questions = [
     {
-        question: "Qui interprète cet extrait ?",
-        reponses: [
-            "Jeanne Mas",
-            "Desireless",
-            "Lio",
-            "Julie Pietri"
-        ],
+        texte: "Quel groupe interprète ce morceau ?",
+        reponses: ["Téléphone", "Indochine", "Noir Désir", "Trust"],
         bonneReponse: 1
     },
     {
-        question: "Quel groupe interprète cet extrait ?",
-        reponses: [
-            "Architects",
-            "While She Sleeps",
-            "LANDMVRKS",
-            "Bring Me The Horizon"
-        ],
+        texte: "Quelle artiste interprète ce morceau ?",
+        reponses: ["Christina Aguilera", "P!nk", "Britney Spears", "Kylie Minogue"],
         bonneReponse: 2
     },
     {
-        question: "Quel groupe interprète cet extrait ?",
-        reponses: [
-            "Images",
-            "Début de Soirée",
-            "Gold",
-            "Partenaire Particulier"
-        ],
-        bonneReponse: 0
-    },
-    {
-        question: "Quel groupe interprète cet extrait ?",
-        reponses: [
-            "All Saints",
-            "Destiny's Child",
-            "TLC",
-            "Spice Girls"
-        ],
+        texte: "Quel artiste interprète ce morceau ?",
+        reponses: ["Daniel Powter", "James Blunt", "Gavin DeGraw", "Andreas Johnson"],
         bonneReponse: 3
     },
     {
-        question: "Qui interprète cet extrait ?",
-        reponses: [
-            "Corona",
-            "Gala",
-            "Haddaway",
-            "Snap!"
-        ],
-        bonneReponse: 1
-    },
-    {
-        question: "Quel groupe interprète cet extrait ?",
-        reponses: [
-            "New Radicals",
-            "The Verve",
-            "Semisonic",
-            "Spin Doctors"
-        ],
+        texte: "Quel groupe interprète ce morceau ?",
+        reponses: ["Earth, Wind & Fire", "Kool & The Gang", "Chic", "The Commodores"],
         bonneReponse: 0
     },
     {
-        question: "Quel groupe interprète cet extrait ?",
-        reponses: [
-            "O-Zone",
-            "Aqua",
-            "Eiffel 65",
-            "Las Ketchup"
-        ],
+        texte: "Quelle artiste interprète ce morceau ?",
+        reponses: ["Lara Fabian", "Céline Dion", "Isabelle Boulay", "Natasha St-Pier"],
+        bonneReponse: 1
+    },
+    {
+        texte: "Quel groupe interprète ce morceau ?",
+        reponses: ["Modjo", "Cassius", "Daft Punk", "Justice"],
+        bonneReponse: 2
+    },
+    {
+        texte: "Quel groupe interprète ce morceau ?",
+        reponses: ["Téléphone", "Indochine", "Les Rita Mitsouko", "Noir Désir"],
         bonneReponse: 0
     },
     {
-        question: "Qui interprète cet extrait ?",
-        reponses: [
-            "Angèle",
-            "Stromae",
-            "Orelsan",
-            "Maître Gims"
-        ],
-        bonneReponse: 1
-    },
-    {
-        question: "Quel groupe interprète cet extrait ?",
-        reponses: [
-            "Stardust",
-            "Modjo",
-            "Cassius",
-            "Superfunk"
-        ],
-        bonneReponse: 1
-    },
-    {
-        question: "Qui interprète cet extrait ?",
-        reponses: [
-            "Dua Lipa",
-            "Lady Gaga",
-            "Katy Perry",
-            "Miley Cyrus"
-        ],
+        texte: "Quel groupe interprète ce morceau ?",
+        reponses: ["The Human League", "Tears for Fears", "Orchestral Manoeuvres in the Dark", "The Buggles"],
         bonneReponse: 3
+    },
+    {
+        texte: "Quel groupe interprète ce morceau ?",
+        reponses: ["Début de Soirée", "Images", "Gold", "Partenaire Particulier"],
+        bonneReponse: 1
+    },
+    {
+        texte: "Quelle artiste interprète ce morceau ?",
+        reponses: ["Ava Max", "Bebe Rexha", "Dua Lipa", "Zara Larsson"],
+        bonneReponse: 2
     }
 ];
 
 const morceauxSprint = [
     {
-        titre: "Tu ne m'as pas laissé le temps",
-        artiste: "David Hallyday",
-        audio: "/audio/sprint/sprint1.mp3"
+        titre: "Ce rêve bleu",
+        film: "Aladdin",
+        source: "audio/sprint/sprint1.mp3"
     },
     {
-        titre: "Where I'm Headed",
-        artiste: "Lene Marlin",
-        audio: "/audio/sprint/sprint2.mp3"
+        titre: "De zéro en héros",
+        film: "Hercule",
+        source: "audio/sprint/sprint2.mp3"
     },
     {
-        titre: "Mambo N. 5",
-        artiste: "Lou Bega",
-        audio: "/audio/sprint/sprint3.mp3"
+        titre: "Un homme libre",
+        film: "La Planète au trésor",
+        source: "audio/sprint/sprint3.mp3"
     },
     {
-        titre: "Mais qui est la Belette ?",
-        artiste: "Manau",
-        audio: "/audio/sprint/sprint4.mp3"
+        titre: "Comme un homme",
+        film: "Mulan",
+        source: "audio/sprint/sprint4.mp3"
     },
     {
-        titre: "Livin' la vida loca",
-        artiste: "Ricky Martin",
-        audio: "/audio/sprint/sprint5.mp3"
+        titre: "Hakuna Matata",
+        film: "Le Roi Lion",
+        source: "audio/sprint/sprint5.mp3"
     }
 ];
 
@@ -153,6 +110,14 @@ let morceauSprint = null;
 let questionPrete = false;
 const nombreMorceauxSprint = morceauxSprint.length;
 
+// État de la manche Combo
+const nombreMorceauxCombo = 10;
+let morceauCombo = 0;
+let chronoCombo = null;
+let tempsRestantCombo = 45;
+let reponsesOuvertesCombo = false;
+let morceauComboDemarre = false;
+
 // Manche actuellement jouée
 let mancheActuelle = "qcm";
 
@@ -166,12 +131,14 @@ const ordreManches = [
 function envoyerMorceauSprintAnimateur() {
     const morceau = morceauxSprint[morceauSprint - 1];
 
+    console.log("Morceau Sprint envoyé :", morceau);
+
     io.emit("morceau-sprint-animateur", {
         numero: morceauSprint,
         total: nombreMorceauxSprint,
         titre: morceau.titre,
         artiste: morceau.artiste,
-        audio: morceau.audio
+        audio: morceau.source
     });
 }
 
@@ -226,9 +193,15 @@ function passerMancheSuivante() {
             total: nombreMorceauxSprint
         });
 
-    envoyerMorceauSprintAnimateur();
+        envoyerMorceauSprintAnimateur();
     }
+
     io.emit("manche-changee", mancheActuelle);
+
+    if (mancheActuelle === "combo") {
+        morceauCombo = 1;
+        preparerMorceauCombo();
+    }
 }
 
 io.on("connection", (socket) => {
@@ -426,6 +399,34 @@ io.on("connection", (socket) => {
         envoyerMorceauSprintAnimateur();
     });
 
+    socket.on("test-combo", () => {
+        console.log("🧪 Test direct du Combo");
+
+        clearInterval(chrono);
+        clearInterval(chronoCombo);
+
+        partieEnCours = true;
+        mancheActuelle = "combo";
+
+        morceauCombo = 1;
+        tempsRestantCombo = 45;
+        reponsesOuvertesCombo = false;
+        morceauComboDemarre = false;
+
+        // Réinitialiser les réponses et corrections Combo
+        for (const equipeId of Object.keys(reponsesCombo)) {
+            delete reponsesCombo[equipeId];
+        }
+
+        for (const equipeId of Object.keys(correctionsCombo)) {
+            delete correctionsCombo[equipeId];
+        }
+
+        io.emit("manche-changee", mancheActuelle);
+
+        preparerMorceauCombo();
+    });
+
     socket.on("reponse-equipe", (reponse) => {
         const nomEquipe = socket.nomEquipe;
         if (!partieEnCours || mancheActuelle !== "qcm" ||!questionEnCours || questionPrete) {
@@ -581,6 +582,55 @@ io.on("connection", (socket) => {
         morceauSuivantSprint();
     });
 
+    socket.on("demarrer-morceau-combo", () => {
+        demarrerChronoCombo();
+    });
+
+    socket.on("combo-reponse", (reponse) => {
+        // Vérifier que le Combo est actif
+        if (!partieEnCours || mancheActuelle !== "combo") {
+            return;
+        }
+
+        // Vérifier que les réponses sont ouvertes
+        if (!reponsesOuvertesCombo) {
+            return;
+        }
+
+        // Vérifier l'identité de l'équipe
+        const nomEquipe = socket.nomEquipe;
+        if (!nomEquipe || !equipes[nomEquipe] || equipes[nomEquipe].socketId !== socket.id) {
+            return;
+        }
+
+        // Vérifier que la réponse est une chaîne
+        if (typeof reponse !== "string") {
+            return;
+        }
+
+        // Nettoyer la réponse
+        const texte = reponse.trim().slice(0, 300);
+
+        if (texte.length === 0) {
+            return;
+        }
+
+        // Enregistrer la réponse
+        enregistrerReponse(nomEquipe, morceauCombo, texte);
+
+        console.log(
+            "Combo : réponse enregistrée",
+            nomEquipe,
+            "morceau",
+            morceauCombo
+        );
+
+        // Confirmer la réception
+        socket.emit("combo-reponse-enregistree", {
+            numero: morceauCombo
+        });
+    });
+
     socket.on("disconnect", () => {
         if (socket.nomEquipe && equipes[socket.nomEquipe] && equipes[socket.nomEquipe].socketId === socket.id) {
             equipes[socket.nomEquipe].socketId =null;
@@ -640,6 +690,7 @@ function envoyerQuestion() {
         " envoyée"
     );
 }
+
 function demarrerChronoQcm() {
     if (!questionPrete || !questionEnCours) {
         return;
@@ -663,6 +714,84 @@ function demarrerChronoQcm() {
 
             io.emit("temps-ecoule");
             questionSuivante();
+        }
+    }, 1000);
+}
+
+function preparerMorceauCombo() {
+
+    if (!partieEnCours || mancheActuelle !== "combo") {
+        return;
+    }
+
+    if (morceauCombo < 1 || morceauCombo > nombreMorceauxCombo) {
+        return;
+    }
+
+    // Aucun chronomètre ne doit rester actif
+    clearInterval(chronoCombo);
+    chronoCombo = null;
+
+    tempsRestantCombo = 45;
+    reponsesOuvertesCombo = false;
+    morceauComboDemarre = false;
+
+    console.log(
+        "Combo : préparation du morceau",
+        morceauCombo,
+        "/",
+        nombreMorceauxCombo
+    );
+
+    // Informer les interfaces qu'un morceau est prêt
+    io.emit("combo-morceau-prepare", {
+        numero: morceauCombo,
+        total: nombreMorceauxCombo,
+        temps: tempsRestantCombo
+    });
+}
+
+function demarrerChronoCombo() {
+    if (!partieEnCours || mancheActuelle !== "combo") {
+        return;
+    }
+
+    if (morceauComboDemarre || reponsesOuvertesCombo) {
+        return;
+    }
+
+    if (morceauCombo < 1 || morceauCombo > nombreMorceauxCombo) {
+        return;
+    }
+
+    morceauComboDemarre = true;
+    reponsesOuvertesCombo = true;
+    tempsRestantCombo = 45;
+
+    console.log("Combo : lancement du morceau", morceauCombo);
+
+    io.emit("combo-demarre", {
+        numero: morceauCombo,
+        temps: tempsRestantCombo
+    });
+
+    clearInterval(chronoCombo);
+
+    chronoCombo = setInterval(() => {
+        tempsRestantCombo--;
+        io.emit("combo-chrono", tempsRestantCombo);
+
+        if (tempsRestantCombo <= 0) {
+            clearInterval(chronoCombo);
+            chronoCombo = null;
+            reponsesOuvertesCombo = false;
+            console.log(
+                "Combo : fin du temps pour le morceau",
+                morceauCombo
+            );
+            io.emit("combo-temps-ecoule", {
+                numero: morceauCombo
+            });
         }
     }, 1000);
 }

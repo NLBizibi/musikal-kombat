@@ -68,6 +68,37 @@
             <div id="propositionsEquipe"></div>
 
             <p id="chronoEquipe">—</p>
+            <div id="zoneCombo" style="display: none;">
+
+            <h3>🥊 COMBO</h3>
+
+            <p id="numeroMorceauCombo">
+                En attente du morceau...
+            </p>
+
+            <form id="formCombo">
+
+                <label for="reponseCombo"> Titre et artiste :</label>
+
+                <input
+                    id="reponseCombo"
+                    type="text"
+                    maxlength="300"
+                    autocomplete="off"
+                    placeholder="Ex : Billie Jean - Michael Jackson"
+                    required
+                    disabled
+                >
+                <button id="boutonEnvoyerCombo" type="submit" disabled>
+                    Envoyer ma réponse
+                </button>
+            </form>
+
+                <p id="statusCombo">
+                    En attente du lancement...
+                </p>
+
+            </div>
 
             <button id="boutonBuzzer" disabled>
                 🔴 BUZZER

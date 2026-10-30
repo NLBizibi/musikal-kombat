@@ -22,9 +22,12 @@
 
             <button id="nouvellePartie">Nouvelle partie</button>
             <button id="testSprint">🧪 Tester Sprint</button>
+            <button id="testCombo">🧪 Tester Combo</button>
             <button id="mancheSuivante" disabled>
                 Passer à la manche suivante
-            <button id="afficherClassement">🏆 Afficher le classement</button>
+            </button>
+            <button id="afficherClassement">
+                🏆 Afficher le classement
             </button>
 
             <div id="validationSprint">
@@ -61,6 +64,27 @@
                 <button id="personneNeTrouveSprint">⏭️ Personne ne trouve</button>
                 <h2 id="morceauSprintAnimateur">Morceau Sprint : —</h2>
                 <p id="reponseSprintAnimateur"></p>
+            </div>
+            <div id="infosCombo" style="display: none;">
+
+                <h2>🥊 COMBO</h2>
+
+                <p id="morceauComboAnimateur">
+                    Morceau : —
+                </p>
+
+                <p id="chronoComboAnimateur">
+                    45 s
+                </p>
+
+                <button id="lancerMorceauCombo" disabled>
+                    ▶️ Lancer le morceau
+                </button>
+
+                <p id="statusComboAnimateur">
+                    En attente de la manche...
+                </p>
+
             </div>
 
         </section>
