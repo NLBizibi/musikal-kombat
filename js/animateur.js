@@ -50,6 +50,11 @@ const boutonLancerMorceauCombo =
     document.getElementById("lancerMorceauCombo");
 const statusComboAnimateur =
     document.getElementById("statusComboAnimateur");
+const correctionCombo =
+    document.getElementById("correctionCombo");
+
+const listeReponsesCombo =
+    document.getElementById("listeReponsesCombo");
 
 let classementAffiche = false;
 
@@ -272,6 +277,8 @@ socket.on("qcm-question-demarree", () => {
 socket.on("combo-morceau-prepare", (morceau) => {
 
     infosCombo.style.display = "block";
+    correctionCombo.style.display = "none";
+    listeReponsesCombo.innerHTML = "";
 
     morceauComboAnimateur.textContent =
         "Morceau " + morceau.numero + " / " + morceau.total;
@@ -330,6 +337,102 @@ socket.on("combo-temps-ecoule", () => {
     statusComboAnimateur.textContent =
         "Temps écoulé. Réponses verrouillées.";
 });
+
+socket.on("combo-reponse-direct", (donnees) => {
+    correctionCombo.style.display = "block";
+    let ligne = Array.from(listeReponsesCombo.children)
+        .find(element => element.dataset.equipe === donnees.nomEquipe);
+
+    if (!ligne) {
+        ligne = document.createElement("div");
+        ligne.dataset.equipe = donnees.nomEquipe;
+
+        const nom = document.createElement("h4");
+        nom.textContent = donnees.nomEquipe;
+
+        const reponse = document.createElement("p");
+        reponse.className = "texteReponseCombo";
+
+        ligne.appendChild(nom);
+        ligne.appendChild(reponse);
+
+        listeReponsesCombo.appendChild(ligne);
+    }
+
+    ligne.querySelector(".texteReponseCombo").textContent =
+        donnees.reponse;
+    
+    ajouterBoutonsCorrectionCombo(
+        ligne,
+        donnees.nomEquipe,
+        donnees.numero
+    ); 
+});
+
+socket.on("combo-reponses-correction", (donnees) => {
+
+    // Afficher le panneau de correction
+    correctionCombo.style.display = "block";
+
+    // Effacer les éventuelles anciennes réponses
+    listeReponsesCombo.innerHTML = "";
+
+    // Mettre à jour le statut
+    statusComboAnimateur.textContent =
+        "Correction du morceau " + donnees.numero;
+
+    // Afficher chaque équipe et sa réponse
+    for (const equipe of donnees.reponses) {
+
+        const ligne = document.createElement("div");
+        ligne.dataset.equipe = equipe.nomEquipe;
+
+        const nom = document.createElement("h4");
+        nom.textContent = equipe.nomEquipe;
+
+        const reponse = document.createElement("p");
+        reponse.className = "texteReponseCombo";
+        reponse.textContent =
+            equipe.reponse || "Aucune réponse";
+
+        ligne.appendChild(nom);
+        ligne.appendChild(reponse);
+
+        ajouterBoutonsCorrectionCombo(
+            ligne,
+            equipe.nomEquipe,
+            donnees.numero
+        );
+
+        listeReponsesCombo.appendChild(ligne);
+    }
+});
+
+function ajouterBoutonsCorrectionCombo(ligne, nomEquipe, numero) {
+
+    // Éviter de créer plusieurs fois les boutons
+    if (ligne.querySelector(".boutonsCorrectionCombo")) {
+        return;
+    }
+    const conteneur = document.createElement("div");
+    conteneur.className = "boutonsCorrectionCombo";
+
+    for (const points of [0, 1, 2]) {
+        const bouton = document.createElement("button");
+        bouton.type = "button";
+        bouton.textContent = `${points} pt${points > 1 ? "s" : ""}`;
+        bouton.addEventListener("click", () => {
+            socket.emit("combo-corriger", {
+                nomEquipe,
+                numero,
+                points
+            });
+
+        });
+        conteneur.appendChild(bouton);
+    }
+    ligne.appendChild(conteneur);
+}
 
 function afficherEquipes() {
     equipesDisplay.innerHTML = "";

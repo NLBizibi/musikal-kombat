@@ -618,6 +618,12 @@ io.on("connection", (socket) => {
         // Enregistrer la réponse
         enregistrerReponse(nomEquipe, morceauCombo, texte);
 
+        io.emit("combo-reponse-direct", {
+            numero: morceauCombo,
+            nomEquipe: nomEquipe,
+            reponse: texte
+        });
+
         console.log(
             "Combo : réponse enregistrée",
             nomEquipe,
@@ -628,6 +634,59 @@ io.on("connection", (socket) => {
         // Confirmer la réception
         socket.emit("combo-reponse-enregistree", {
             numero: morceauCombo
+        });
+    });
+
+    socket.on("combo-corriger", (donnees) => {
+        // Vérifier que nous sommes dans le Combo
+        if (!partieEnCours || mancheActuelle !== "combo") {
+            return;
+        }
+
+        // Ne pas corriger tant que les réponses sont ouvertes
+        if (reponsesOuvertesCombo || !morceauComboDemarre) {
+            return;
+        }
+
+        // Vérifier les données reçues
+        if (!donnees || typeof donnees !== "object") {
+            return;
+        }
+        const { nomEquipe, numero, points } = donnees;
+
+        // Vérifier l'équipe
+        if (!Object.prototype.hasOwnProperty.call(equipes, nomEquipe)) {
+            return;
+        }
+
+        // Vérifier le numéro du morceau
+        if (numero !== morceauCombo) {
+            return;
+        }
+
+        // Vérifier les points attribués
+        if (![0, 1, 2].includes(points)) {
+            return;
+        }
+
+        // Enregistrer la correction
+        const correctionEnregistree = enregistrerCorrection(
+            nomEquipe,
+            numero,
+            points
+        );
+        if (!correctionEnregistree) {
+            return;
+        }
+        console.log(
+            `Combo : ${nomEquipe} — morceau ${numero} — ${points} point(s)`
+        );
+
+        // Confirmer l'enregistrement
+        socket.emit("combo-correction-confirmee", {
+            nomEquipe,
+            numero,
+            points
         });
     });
 
@@ -718,6 +777,34 @@ function demarrerChronoQcm() {
     }, 1000);
 }
 
+function envoyerReponsesCombo() {
+    if (mancheActuelle !== "combo") {
+        return;
+    }
+    if (reponsesOuvertesCombo) {
+        return;
+    }
+    const resultats = [];
+    for (const nomEquipe in equipes) {
+        const reponse =
+            reponsesCombo[nomEquipe]?.[morceauCombo] ?? "";
+        resultats.push({
+            nomEquipe: nomEquipe,
+            reponse: reponse
+        });
+    }
+
+    io.emit("combo-reponses-correction", {
+        numero: morceauCombo,
+        reponses: resultats
+    });
+
+    console.log(
+        "Combo : réponses transmises pour correction",
+        morceauCombo
+    );
+}
+
 function preparerMorceauCombo() {
 
     if (!partieEnCours || mancheActuelle !== "combo") {
@@ -775,6 +862,8 @@ function demarrerChronoCombo() {
         temps: tempsRestantCombo
     });
 
+    
+
     clearInterval(chronoCombo);
 
     chronoCombo = setInterval(() => {
@@ -792,7 +881,8 @@ function demarrerChronoCombo() {
             io.emit("combo-temps-ecoule", {
                 numero: morceauCombo
             });
-        }
+            envoyerReponsesCombo();
+        }  
     }, 1000);
 }
 
