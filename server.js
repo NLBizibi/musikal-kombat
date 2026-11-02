@@ -118,6 +118,9 @@ let tempsRestantCombo = 45;
 let reponsesOuvertesCombo = false;
 let morceauComboDemarre = false;
 
+// Total des points Combo déjà ajoutés au classement général
+const pointsComboAppliques = {};
+
 // Manche actuellement jouée
 let mancheActuelle = "qcm";
 
@@ -586,6 +589,43 @@ io.on("connection", (socket) => {
         demarrerChronoCombo();
     });
 
+    socket.on("combo-morceau-suivant", () => {
+        // Vérifier que le Combo est actif
+        if (!partieEnCours || mancheActuelle !== "combo") {
+            return;
+        }
+
+        // Empêcher de passer un morceau non commencé
+        if (!morceauComboDemarre) {
+            return;
+        }
+
+        // Empêcher de passer pendant les 45 secondes
+        if (reponsesOuvertesCombo) {
+            return;
+        }
+
+        // Vérifier que toutes les équipes ont été corrigées
+        if (!toutesEquipesCorrigeesCombo()) {
+            console.log(
+                "Combo : impossible de passer au morceau suivant, corrections incomplètes."
+            );
+            return;
+        }
+
+        // Gérer la fin du dixième morceau
+        if (morceauCombo >= nombreMorceauxCombo) {
+            console.log("Combo : les 10 morceaux sont terminés.");
+            terminerManche();
+            return;
+        }
+
+        // Préparer le morceau suivant
+        morceauCombo++;
+
+        preparerMorceauCombo();
+    });
+
     socket.on("combo-reponse", (reponse) => {
         // Vérifier que le Combo est actif
         if (!partieEnCours || mancheActuelle !== "combo") {
@@ -681,12 +721,42 @@ io.on("connection", (socket) => {
         console.log(
             `Combo : ${nomEquipe} — morceau ${numero} — ${points} point(s)`
         );
+        // Calculer le nouveau total du Combo pour cette équipe
+        const nouveauTotalCombo = calculerScoreFinalCombo(nomEquipe);
+
+        // Récupérer le total Combo déjà ajouté au classement
+        const ancienTotalCombo = pointsComboAppliques[nomEquipe] ?? 0;
+
+        // Calculer uniquement la différence
+        const difference = nouveauTotalCombo - ancienTotalCombo;
+
+        // Appliquer cette différence au score général
+        equipes[nomEquipe].score += difference;
+
+        // Mémoriser le nouveau total appliqué
+        pointsComboAppliques[nomEquipe] = nouveauTotalCombo;
+
+        // Diffuser les nouveaux scores à toutes les interfaces
+        io.emit("scores", equipes);
+
+        console.log(
+            `Combo : ${nomEquipe} | ` +
+            `Correction : ${points} pt(s) | ` +
+            `Variation : ${difference >= 0 ? "+" : ""}${difference} | ` +
+            `Total Combo : ${nouveauTotalCombo} | ` +
+            `Score général : ${equipes[nomEquipe].score}`
+        );
 
         // Confirmer l'enregistrement
         socket.emit("combo-correction-confirmee", {
             nomEquipe,
             numero,
             points
+        });
+
+        io.emit("combo-corrections-etat", {
+            numero: morceauCombo,
+            toutesCorrigees: toutesEquipesCorrigeesCombo()
         });
     });
 
@@ -806,7 +876,6 @@ function envoyerReponsesCombo() {
 }
 
 function preparerMorceauCombo() {
-
     if (!partieEnCours || mancheActuelle !== "combo") {
         return;
     }
@@ -835,6 +904,24 @@ function preparerMorceauCombo() {
         numero: morceauCombo,
         total: nombreMorceauxCombo,
         temps: tempsRestantCombo
+    });
+}
+
+function toutesEquipesCorrigeesCombo() {
+    const nomsEquipes = Object.keys(equipes);
+
+    // Il faut au moins une équipe
+    if (nomsEquipes.length === 0) {
+        return false;
+    }
+
+    // Vérifier que chaque équipe possède une correction
+    return nomsEquipes.every((nomEquipe) => {
+
+        const correction =
+            correctionsCombo[nomEquipe]?.[morceauCombo];
+
+        return [0, 1, 2].includes(correction);
     });
 }
 

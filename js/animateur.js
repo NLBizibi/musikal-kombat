@@ -52,9 +52,10 @@ const statusComboAnimateur =
     document.getElementById("statusComboAnimateur");
 const correctionCombo =
     document.getElementById("correctionCombo");
-
 const listeReponsesCombo =
     document.getElementById("listeReponsesCombo");
+const morceauSuivantCombo =
+    document.getElementById("morceauSuivantCombo");
 
 let classementAffiche = false;
 
@@ -275,33 +276,31 @@ socket.on("qcm-question-demarree", () => {
 // Préparation d'un morceau Combo
 
 socket.on("combo-morceau-prepare", (morceau) => {
-
+    morceauSuivantCombo.disabled = true;
     infosCombo.style.display = "block";
     correctionCombo.style.display = "none";
     listeReponsesCombo.innerHTML = "";
-
-    morceauComboAnimateur.textContent =
-        "Morceau " + morceau.numero + " / " + morceau.total;
-
-    chronoComboAnimateur.textContent =
-        morceau.temps + " s";
-
+    morceauComboAnimateur.dataset.numero = morceau.numero;
+    morceauComboAnimateur.textContent = "Morceau " + morceau.numero + " / " + morceau.total;
+    chronoComboAnimateur.textContent = morceau.temps + " s";
     boutonLancerMorceauCombo.disabled = false;
 
-    statusComboAnimateur.textContent =
-        "Morceau prêt. En attente du lancement.";
+    statusComboAnimateur.textContent = "Morceau prêt. En attente du lancement.";
 });
 
+socket.on("combo-corrections-etat", (donnees) => {
+    if (donnees.numero !== Number(morceauComboAnimateur.dataset.numero)) {
+        return;
+    }
 
+    morceauSuivantCombo.disabled = !donnees.toutesCorrigees;
+});
 // Lancement du morceau par l'animateur
 
 boutonLancerMorceauCombo.addEventListener("click", () => {
-
     boutonLancerMorceauCombo.disabled = true;
-
     socket.emit("demarrer-morceau-combo");
 });
-
 
 // Confirmation du démarrage
 
@@ -406,6 +405,10 @@ socket.on("combo-reponses-correction", (donnees) => {
 
         listeReponsesCombo.appendChild(ligne);
     }
+});
+
+morceauSuivantCombo.addEventListener("click", () => {
+    socket.emit("combo-morceau-suivant");
 });
 
 function ajouterBoutonsCorrectionCombo(ligne, nomEquipe, numero) {

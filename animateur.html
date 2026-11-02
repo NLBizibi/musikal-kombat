@@ -65,28 +65,33 @@
                 <h2 id="morceauSprintAnimateur">Morceau Sprint : —</h2>
                 <p id="reponseSprintAnimateur"></p>
             </div>
+
             <div id="infosCombo" style="display: none;">
-
                 <h2>🥊 COMBO</h2>
-
                 <p id="morceauComboAnimateur">
                     Morceau : —
                 </p>
-
                 <p id="chronoComboAnimateur">
                     45 s
                 </p>
-
                 <button id="lancerMorceauCombo" disabled>
                     ▶️ Lancer le morceau
                 </button>
-
                 <p id="statusComboAnimateur">
                     En attente de la manche...
                 </p>
-
+                <div id="correctionCombo" style="display: none;">
+                <h3>📝 Réponses des équipes</h3>
+                <p>
+                    Corrigez les réponses avant de passer
+                    au morceau suivant.
+                </p>
+                <div id="listeReponsesCombo"></div>
+                <button id="morceauSuivantCombo" disabled>
+                    ⏭️ Morceau suivant
+                </button>
+                </div>
             </div>
-
         </section>
         
         <section id="audio-qcm">
@@ -102,13 +107,9 @@
         </section>
 
         <section id="zoneScores">
-
             <h2>Scores</h2>
-
             <div id="equipesDisplay"></div>
-
         </section>
-
     </main>
 
     <a href="index.html">Accueil</a>
