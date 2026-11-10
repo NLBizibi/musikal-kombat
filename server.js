@@ -1,3 +1,4 @@
+const path = require("path");
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
@@ -13,7 +14,7 @@ const app = express();
 const serveur = http.createServer(app);
 const io = new Server(serveur);
 
-app.use(express.static("."));
+app.use(express.static(path.join(__dirname, "public")));
 
 const questions = [
     {
@@ -214,59 +215,39 @@ io.on("connection", (socket) => {
         creerListeEquipes()
     );
     socket.on("passer-manche-suivante", () => {
-
         if (!partieEnCours) {
         return;
         }
-
         passerMancheSuivante();
     });
 
     socket.on("inscription-equipe", (nomEquipe) => {
-
         if (typeof nomEquipe !== "string") {
             socket.emit(
                 "inscription-refusee",
                 "Nom d'équipe invalide."
             );
-
             return;
         }
-
         nomEquipe = nomEquipe.trim();
-
         if (partieEnCours) {
-
             if (!equipes[nomEquipe]) {
-
                 socket.emit(
                     "inscription-refusee",
                     "La partie a déjà commencé."
                 );
-
                 return;
             }
-
-            if (
-                equipes[nomEquipe].connectee &&
-                equipes[nomEquipe].socketId !== socket.id
-            ) {
-
-                socket.emit(
-                    "inscription-refusee",
-                    "Ce nom d'équipe est déjà connecté."
-                );
-
+            if (equipes[nomEquipe].connectee && equipes[nomEquipe].socketId !== socket.id){
+                socket.emit("inscription-refusee", "Ce nom d'équipe est déjà connecté.");
                 return;
             }
         }
-
         if (nomEquipe.length < 2) {
             socket.emit(
                 "inscription-refusee",
                 "Le nom doit contenir au moins 2 caractères."
             );
-
             return;
         }   
 
@@ -352,6 +333,31 @@ io.on("connection", (socket) => {
             nomEquipe +
             " est inscrit(e)"
         );
+    });
+
+    socket.on("supprimer-equipe", (nomEquipe) => {
+        if (typeof nomEquipe !== "string") {
+            return;
+        }
+        const equipe = equipes[nomEquipe];
+        if (!equipe) {
+            return;
+        }
+        if (equipe.connectee) {
+            console.log(
+                "Suppression refusée : " + nomEquipe + " est connectée."
+            );
+            return;
+        }
+        if (partieEnCours) {
+            console.log(
+                "Suppression refusée : une partie est en cours."
+            );
+            return;
+        }
+        delete equipes[nomEquipe];
+        io.emit("liste-equipes", creerListeEquipes());
+        console.log(nomEquipe + " a été supprimée.");
     });
 
     socket.on("demarrer-partie", () => {

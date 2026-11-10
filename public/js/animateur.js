@@ -475,6 +475,25 @@ function afficherEquipes() {
         ligne.appendChild(boutonPlus);
         ligne.appendChild(boutonMoins);
 
+        // Suppression réservée aux équipes déconnectées
+        if (!equipe.connectee) {
+            const boutonSupprimer = document.createElement("button");
+            boutonSupprimer.textContent = "🗑️ Supprimer";
+
+            boutonSupprimer.addEventListener("click", () => {
+                const confirmation = confirm(
+                    `Supprimer définitivement l'équipe ${equipe.nom} ?`
+                );
+
+                if (!confirmation) {
+                    return;
+                }
+
+                socket.emit("supprimer-equipe", equipe.nom);
+            });
+
+            ligne.appendChild(boutonSupprimer);
+        }
         equipesDisplay.appendChild(ligne);
     }
 }

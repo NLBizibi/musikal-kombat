@@ -5,6 +5,7 @@ const nomEquipeInput = document.getElementById("nomEquipeInput");
 const boutonInscription = document.getElementById("boutonInscription");
 const statusInscription = document.getElementById("statusInscription");
 const interfaceEquipe = document.getElementById("interfaceEquipe");
+const changerEquipe = document.getElementById("changerEquipe");
 const scoreEquipe = document.getElementById("scoreEquipe");
 const statusEquipe = document.getElementById("statusEquipe");
 const questionEquipe = document.getElementById("questionEquipe");
@@ -110,6 +111,23 @@ socket.on( "inscription-refusee", (message) => {
         scoreEquipe.style.display = "none";
     }
 );
+
+changerEquipe.addEventListener("click", () => {
+
+    const confirmation = confirm(
+        "Voulez-vous quitter cette équipe et choisir un nouveau nom ?"
+    );
+
+    if (!confirmation) {
+        return;
+    }
+
+    // Supprimer le nom mémorisé sur cet appareil
+    localStorage.removeItem("musikalKombatEquipe");
+
+    // Recharger la page
+    window.location.reload();
+});
 
 socket.on("partie-demarree", () => {
         statusEquipe.textContent =
