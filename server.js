@@ -17,84 +17,84 @@ const io = new Server(serveur);
 app.use(express.static(path.join(__dirname, "public")));
 
 const questions = [
-    {
-        texte: "Quel groupe interprète ce morceau ?",
-        reponses: ["Téléphone", "Indochine", "Noir Désir", "Trust"],
-        bonneReponse: 1
-    },
-    {
-        texte: "Quelle artiste interprète ce morceau ?",
-        reponses: ["Christina Aguilera", "P!nk", "Britney Spears", "Kylie Minogue"],
-        bonneReponse: 2
-    },
-    {
-        texte: "Quel artiste interprète ce morceau ?",
-        reponses: ["Daniel Powter", "James Blunt", "Gavin DeGraw", "Andreas Johnson"],
-        bonneReponse: 3
-    },
-    {
-        texte: "Quel groupe interprète ce morceau ?",
-        reponses: ["Earth, Wind & Fire", "Kool & The Gang", "Chic", "The Commodores"],
-        bonneReponse: 0
-    },
-    {
-        texte: "Quelle artiste interprète ce morceau ?",
-        reponses: ["Lara Fabian", "Céline Dion", "Isabelle Boulay", "Natasha St-Pier"],
-        bonneReponse: 1
-    },
-    {
-        texte: "Quel groupe interprète ce morceau ?",
-        reponses: ["Modjo", "Cassius", "Daft Punk", "Justice"],
-        bonneReponse: 2
-    },
-    {
-        texte: "Quel groupe interprète ce morceau ?",
-        reponses: ["Téléphone", "Indochine", "Les Rita Mitsouko", "Noir Désir"],
-        bonneReponse: 0
-    },
-    {
-        texte: "Quel groupe interprète ce morceau ?",
-        reponses: ["The Human League", "Tears for Fears", "Orchestral Manoeuvres in the Dark", "The Buggles"],
-        bonneReponse: 3
-    },
-    {
-        texte: "Quel groupe interprète ce morceau ?",
-        reponses: ["Début de Soirée", "Images", "Gold", "Partenaire Particulier"],
-        bonneReponse: 1
-    },
-    {
-        texte: "Quelle artiste interprète ce morceau ?",
-        reponses: ["Ava Max", "Bebe Rexha", "Dua Lipa", "Zara Larsson"],
-        bonneReponse: 2
-    }
+  {
+    texte: "Quel artiste interprète ce morceau ?",
+    reponses: ["Bananarama", "Katrina and the Waves", "The Bangles", "The Go-Go's"],
+    bonneReponse: 1
+  },
+  {
+    texte: "Quel artiste interprète ce morceau ?",
+    reponses: ["Outlandish", "Rizzle Kicks", "The Black Eyed Peas", "Madcon"],
+    bonneReponse: 3
+  },
+  {
+    texte: "Quel artiste interprète ce morceau ?",
+    reponses: ["Deep Blue Something", "Semisonic", "Gin Blossoms", "The Rembrandts"],
+    bonneReponse: 0
+  },
+  {
+    texte: "Quel artiste interprète ce morceau ?",
+    reponses: ["Eurythmics", "The Cardigans", "Roxette", "Ace of Base"],
+    bonneReponse: 2
+  },
+  {
+    texte: "Quel artiste interprète ce morceau ?",
+    reponses: ["Charles & Eddie", "Milli Vanilli", "Soul II Soul", "Lighthouse Family"],
+    bonneReponse: 0
+  },
+  {
+    texte: "Quel artiste interprète ce morceau ?",
+    reponses: ["Morcheeba", "Everything but the Girl", "Groove Armada", "Moloko"],
+    bonneReponse: 3
+  },
+  {
+    texte: "Quel artiste interprète ce morceau ?",
+    reponses: ["Sugar Ray", "Len", "Smash Mouth", "Wheatus"],
+    bonneReponse: 1
+  },
+  {
+    texte: "Quel artiste interprète ce morceau ?",
+    reponses: ["Lilly Wood & The Prick", "Ofenbach", "Klingande", "Robin Schulz"],
+    bonneReponse: 0
+  },
+  {
+    texte: "Quel artiste interprète ce morceau ?",
+    reponses: ["Nik Kershaw", "Howard Jones", "Matthew Wilder", "Paul Young"],
+    bonneReponse: 2
+  },
+  {
+    texte: "Quel artiste interprète ce morceau ?",
+    reponses: ["Foster the People", "Empire of the Sun", "Passion Pit", "Capital Cities"],
+    bonneReponse: 3
+  }
 ];
 
-const morceauxSprint = [
-    {
-        titre: "Ce rêve bleu",
-        film: "Aladdin",
-        source: "audio/sprint/sprint1.mp3"
-    },
-    {
-        titre: "De zéro en héros",
-        film: "Hercule",
-        source: "audio/sprint/sprint2.mp3"
-    },
-    {
-        titre: "Un homme libre",
-        film: "La Planète au trésor",
-        source: "audio/sprint/sprint3.mp3"
-    },
-    {
-        titre: "Comme un homme",
-        film: "Mulan",
-        source: "audio/sprint/sprint4.mp3"
-    },
-    {
-        titre: "Hakuna Matata",
-        film: "Le Roi Lion",
-        source: "audio/sprint/sprint5.mp3"
-    }
+const morceauxSprint1 = [
+  {
+    titre: "Pour le plaisir",
+    artiste: "Herbert Léonard",
+    source: "audio/sprint/sprint1.mp3"
+  },
+  {
+    titre: "Roi",
+    artiste: "Bilal Hassani",
+    source: "audio/sprint/sprint2.mp3"
+  },
+  {
+    titre: "Angels",
+    artiste: "Robbie Williams",
+    source: "audio/sprint/sprint3.mp3"
+  },
+  {
+    titre: "Toutes les femmes sont belles",
+    artiste: "Frank Michael",
+    source: "audio/sprint/sprint4.mp3"
+  },
+  {
+    titre: "When Love Takes Over",
+    artiste: "Kelly Rowland",
+    source: "audio/sprint/sprint5.mp3"
+  }
 ];
 
 const equipes = {};
@@ -954,8 +954,6 @@ function demarrerChronoCombo() {
         numero: morceauCombo,
         temps: tempsRestantCombo
     });
-
-    
 
     clearInterval(chronoCombo);
 
