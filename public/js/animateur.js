@@ -12,6 +12,12 @@ const boutonConnexionAnimateur =
     formConnexionAnimateur.querySelector("button[type='submit']");
 const statusConnexionAnimateur =
     document.getElementById("statusConnexionAnimateur");
+const zoneQcmAnimateur =
+    document.getElementById("zoneQcmAnimateur");
+const zoneSprintAnimateur =
+    document.getElementById("zoneSprintAnimateur");
+const zoneComboAnimateur =
+    document.getElementById("zoneComboAnimateur");
 
 let codeAnimateur = null;
 
@@ -73,6 +79,12 @@ const morceauSuivantCombo =
     document.getElementById("morceauSuivantCombo");
 
 let classementAffiche = false;
+
+function afficherMancheAnimateur(manche) {
+    zoneQcmAnimateur.hidden = manche !== "qcm";
+    zoneSprintAnimateur.hidden = manche !== "sprint";
+    zoneComboAnimateur.hidden = manche !== "combo";
+}
 
 boutonAfficherClassement.addEventListener("click", () => {
     classementAffiche = !classementAffiche;
@@ -183,8 +195,7 @@ socket.on("manche-changee", (manche) => {
     statusAnimateur.textContent =
         "Manche " + manche.toUpperCase();
 
-    infosCombo.style.display =
-        manche === "combo" ? "block" : "none";
+    afficherMancheAnimateur(manche);
 
     if (manche !== "combo") {
         boutonLancerMorceauCombo.disabled = true;
@@ -329,6 +340,7 @@ socket.on("partie-terminee", () => {
     numeroQuestion.textContent = "Partie terminée";
     chrono.textContent = "—";
     boutonMancheSuivante.disabled = true;
+    afficherMancheAnimateur(null);
 });
 
 boutonNouvellePartie.addEventListener("click", () => {
@@ -358,7 +370,6 @@ socket.on("qcm-question-demarree", () => {
 
 socket.on("combo-morceau-prepare", (morceau) => {
     morceauSuivantCombo.disabled = true;
-    infosCombo.style.display = "block";
     correctionCombo.style.display = "none";
     listeReponsesCombo.innerHTML = "";
     morceauComboAnimateur.dataset.numero = morceau.numero;

@@ -20,8 +20,17 @@ const reponseCombo = document.getElementById("reponseCombo");
 const boutonEnvoyerCombo = document.getElementById("boutonEnvoyerCombo");
 const numeroMorceauCombo = document.getElementById("numeroMorceauCombo");
 const statusCombo = document.getElementById("statusCombo");
+const chronoCombo = document.getElementById("chronoCombo");
+const zoneQcmEquipe = document.getElementById("zoneQcmEquipe");
+const zoneSprintEquipe = document.getElementById("zoneSprintEquipe");
 
 let comboOuvert = false;
+
+function afficherMancheEquipe(manche) {
+    zoneQcmEquipe.hidden = manche !== "qcm";
+    zoneSprintEquipe.hidden = manche !== "sprint";
+    zoneCombo.hidden = manche !== "combo";
+}
 
 function definirSaisieCombo(ouverte) {
     comboOuvert = ouverte;
@@ -82,6 +91,7 @@ formInscription.addEventListener("submit",(event) => {
 
 socket.on("inscription-validee", (donnees) => {
     nomEquipe = donnees.nom;
+    afficherMancheEquipe(donnees.manche);
     localStorage.setItem("musikalKombatEquipe", nomEquipe);
     nomEquipeDisplay.textContent = donnees.nom;
     score.textContent = donnees.score;
@@ -196,8 +206,7 @@ socket.on("temps-ecoule", () => {
 );
 
 socket.on("manche-changee", (manche) => {
-    zoneCombo.style.display =
-    manche === "combo" ? "block" : "none";
+    afficherMancheEquipe(manche);
     definirSaisieCombo(false);
 
     console.log("Manche changee reçue : ", manche);
@@ -250,6 +259,8 @@ socket.on("partie-terminee", () => {
     questionEquipe.textContent = "";
     propositionsEquipe.innerHTML = "";
     chronoEquipe.textContent = "—";
+    chronoCombo.textContent = "—";
+    afficherMancheEquipe(null);
 });
 
 boutonBuzzer.addEventListener("click", () => {
@@ -261,7 +272,6 @@ boutonBuzzer.addEventListener("click", () => {
 
 socket.on("combo-morceau-prepare", (morceau) => {
 
-    zoneCombo.style.display = "block";
     boutonBuzzer.disabled = true;
 
     numeroMorceauCombo.textContent =
@@ -270,7 +280,7 @@ socket.on("combo-morceau-prepare", (morceau) => {
     reponseCombo.value = "";
     definirSaisieCombo(false);
 
-    chronoEquipe.textContent = morceau.temps + " s";
+    chronoCombo.textContent = morceau.temps + " s";
     statusCombo.textContent = "En attente du lancement...";
     statusEquipe.textContent = "🥊 Combo : préparez-vous !";
 });
@@ -279,17 +289,16 @@ socket.on("combo-morceau-prepare", (morceau) => {
 // COMBO : ouverture des réponses
 
 socket.on("combo-demarre", (donnees) => {
-    zoneCombo.style.display = "block";
     numeroMorceauCombo.textContent = "Morceau " + donnees.numero + " / 10";
     definirSaisieCombo(true);
 
-    chronoEquipe.textContent = donnees.temps + " s";
+    chronoCombo.textContent = donnees.temps + " s";
     statusCombo.textContent = "Saisissez votre réponse !";
 });
 
 // COMBO : chronomètre
 socket.on("combo-chrono", (temps) => {
-    chronoEquipe.textContent = temps + " s";
+    chronoCombo.textContent = temps + " s";
 });
 
 
@@ -320,7 +329,7 @@ socket.on("combo-reponse-enregistree", (donnees) => {
 // COMBO : fermeture des réponses
 socket.on("combo-temps-ecoule", () => {
     definirSaisieCombo(false);
-    chronoEquipe.textContent = "0 s";
+    chronoCombo.textContent = "0 s";
     statusCombo.textContent =
         "⏱️ Temps écoulé ! Réponse verrouillée.";
     statusEquipe.textContent =

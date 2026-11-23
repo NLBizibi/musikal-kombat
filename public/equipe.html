@@ -65,21 +65,37 @@
                 🔄 Changer d'équipe
             </button>
 
+            <div id="zoneQcmEquipe">
+
             <h2 id="questionEquipe">
                 En attente de la question...
             </h2>
-        
 
             <div id="propositionsEquipe"></div>
 
             <p id="chronoEquipe">—</p>
-            <div id="zoneCombo" style="display: none;">
+
+            </div>
+
+            <div id="zoneSprintEquipe" hidden>
+
+            <h2>🔴 SPRINT</h2>
+
+            <button id="boutonBuzzer" disabled>
+                🔴 BUZZER
+            </button>
+
+            </div>
+
+            <div id="zoneCombo" hidden>
 
             <h3>🥊 COMBO</h3>
 
             <p id="numeroMorceauCombo">
                 En attente du morceau...
             </p>
+
+            <p id="chronoCombo">—</p>
 
             <form id="formCombo">
 
@@ -104,10 +120,6 @@
                 </p>
 
             </div>
-
-            <button id="boutonBuzzer" disabled>
-                🔴 BUZZER
-            </button>
 
         </section>
 
