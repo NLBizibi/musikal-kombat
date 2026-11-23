@@ -16,6 +16,21 @@
 
     <main>
 
+        <section id="zoneConnexionAnimateur">
+            <h2>🔒 Accès animateur</h2>
+            <p id="statusConnexionAnimateur">
+                Saisissez le code animateur pour piloter la partie.
+            </p>
+            <form id="formConnexionAnimateur">
+                <input type="password" id="codeAnimateur"
+                    placeholder="Code animateur"
+                    autocomplete="current-password" required>
+                <button type="submit">Se connecter</button>
+            </form>
+        </section>
+
+        <div id="controleAnimateur" style="display: none;">
+
         <section id="zoneAnimateur">
 
             <p id="statusAnimateur">En attente d'une partie</p>
@@ -110,6 +125,8 @@
             <h2>Scores</h2>
             <div id="equipesDisplay"></div>
         </section>
+
+        </div>
     </main>
 
     <a href="index.html">Accueil</a>

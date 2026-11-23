@@ -1,4 +1,5 @@
 const path = require("path");
+const crypto = require("crypto");
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
@@ -13,6 +14,19 @@ const {
 const app = express();
 const serveur = http.createServer(app);
 const io = new Server(serveur);
+
+// Un nouveau code est généré à chaque lancement et affiché en console.
+// Aucun secret n'est stocké dans le dépôt.
+const CODE_ANIMATEUR = String(
+    crypto.randomInt(0, 1000000)
+).padStart(6, "0");
+
+const ROLE_SPECTATEUR = "spectateur";
+const ROLE_EQUIPE = "equipe";
+const ROLE_ANIMATEUR = "animateur";
+const MAX_TENTATIVES_ANIMATEUR = 5;
+
+let socketAnimateur = null;
 
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -69,7 +83,7 @@ const questions = [
   }
 ];
 
-const morceauxSprint1 = [
+const morceauxSprint = [
   {
     titre: "Pour le plaisir",
     artiste: "Herbert Léonard",
@@ -132,18 +146,21 @@ const ordreManches = [
     "uppercut"
 ];
 
-function envoyerMorceauSprintAnimateur() {
+function envoyerMorceauSprintAnimateur(destinataire = socketAnimateur) {
     const morceau = morceauxSprint[morceauSprint - 1];
 
     console.log("Morceau Sprint envoyé :", morceau);
 
-    io.emit("morceau-sprint-animateur", {
-        numero: morceauSprint,
-        total: nombreMorceauxSprint,
-        titre: morceau.titre,
-        artiste: morceau.artiste,
-        audio: morceau.source
-    });
+    // La réponse du morceau ne doit jamais être diffusée aux équipes.
+    if (destinataire) {
+        destinataire.emit("morceau-sprint-animateur", {
+            numero: morceauSprint,
+            total: nombreMorceauxSprint,
+            titre: morceau.titre,
+            artiste: morceau.artiste,
+            audio: morceau.source
+        });
+    }
 }
 
 function morceauSuivantSprint() {
@@ -208,13 +225,174 @@ function passerMancheSuivante() {
     }
 }
 
+function exigerAnimateur(socket, evenement) {
+    if (socket.role === ROLE_ANIMATEUR) {
+        return true;
+    }
+
+    console.warn(
+        `Événement "${evenement}" refusé : rôle ${socket.role}.`
+    );
+    socket.emit("action-refusee", {
+        evenement,
+        raison: "Cette action est réservée à l'animateur."
+    });
+    return false;
+}
+
+function estEquipeAutorisee(socket, nomEquipe) {
+    return (
+        socket.role === ROLE_EQUIPE &&
+        socket.nomEquipe === nomEquipe &&
+        !!equipes[nomEquipe] &&
+        equipes[nomEquipe].socketId === socket.id &&
+        equipes[nomEquipe].connectee
+    );
+}
+
+function detacherEquipe(socket) {
+    const nomEquipe = socket.nomEquipe;
+    if (!nomEquipe) {
+        return;
+    }
+    socket.nomEquipe = null;
+
+    const equipe = equipes[nomEquipe];
+    if (!equipe || equipe.socketId !== socket.id) {
+        return;
+    }
+
+    equipe.socketId = null;
+    equipe.connectee = false;
+
+    // Une équipe déconnectée ne doit pas bloquer la question en cours.
+    if (partieEnCours && mancheActuelle === "qcm" && questionEnCours) {
+        equipe.aRepondu = true;
+        if (toutesLesEquipesOntRepondu()) {
+            clearInterval(chrono);
+            questionSuivante();
+        }
+    }
+
+    io.emit("liste-equipes", creerListeEquipes());
+}
+
+function envoyerEtatAnimateur(socket) {
+    socket.emit("liste-equipes", creerListeEquipes());
+    socket.emit("scores", equipes);
+    socket.emit("manche-changee", mancheActuelle);
+
+    if (!partieEnCours) {
+        return;
+    }
+
+    if (mancheActuelle === "qcm") {
+        if (questionEnCours) {
+            const question = questions[indiceQuestion];
+            socket.emit("nouvelle-question", {
+                manche: mancheActuelle,
+                numero: indiceQuestion + 1,
+                total: questions.length,
+                texte: question.texte,
+                reponses: question.reponses
+            });
+            socket.emit("chrono", tempsRestant);
+            if (!questionPrete) {
+                socket.emit("qcm-question-demarree");
+            }
+        } else {
+            socket.emit("qcm-attente-question-suivante");
+        }
+    }
+
+    if (mancheActuelle === "sprint") {
+        socket.emit("nouveau-morceau-sprint", {
+            numero: morceauSprint,
+            total: nombreMorceauxSprint
+        });
+        envoyerMorceauSprintAnimateur(socket);
+    }
+
+    if (mancheActuelle === "combo") {
+        socket.emit("combo-morceau-prepare", {
+            numero: morceauCombo,
+            total: nombreMorceauxCombo,
+            temps: tempsRestantCombo
+        });
+        if (reponsesOuvertesCombo) {
+            socket.emit("combo-demarre", {
+                numero: morceauCombo,
+                temps: tempsRestantCombo
+            });
+        } else if (morceauComboDemarre) {
+            envoyerReponsesCombo(socket);
+        }
+    }
+}
+
 io.on("connection", (socket) => {
     console.log("Un appareil vient de se connecter");
+    socket.role = ROLE_SPECTATEUR;
+    socket.tentativesAnimateur = 0;
+
     socket.emit(
         "liste-equipes",
         creerListeEquipes()
     );
+
+    socket.on("authentifier-animateur", (code) => {
+        if (typeof code !== "string") {
+            socket.emit("authentification-animateur-echec", {
+                message: "Code animateur invalide."
+            });
+            return;
+        }
+
+        if (socket.tentativesAnimateur >= MAX_TENTATIVES_ANIMATEUR) {
+            socket.emit("authentification-animateur-echec", {
+                message: "Trop de tentatives. Rechargez la page pour réessayer."
+            });
+            return;
+        }
+
+        if (code.trim() !== CODE_ANIMATEUR) {
+            socket.tentativesAnimateur++;
+            socket.emit("authentification-animateur-echec", {
+                message: "Code animateur incorrect."
+            });
+            console.warn("Authentification animateur refusée.");
+            return;
+        }
+
+        socket.tentativesAnimateur = 0;
+
+        // Un même appareil ne peut pas être à la fois animateur et équipe.
+        detacherEquipe(socket);
+
+        if (socketAnimateur && socketAnimateur.id !== socket.id) {
+            const ancienAnimateur = socketAnimateur;
+            ancienAnimateur.role = ROLE_SPECTATEUR;
+            ancienAnimateur.emit("role-animateur-retire", {
+                raison: "Un autre appareil a pris le contrôle de la partie."
+            });
+            console.log("Reprise du contrôle par un autre animateur.");
+        }
+
+        socket.role = ROLE_ANIMATEUR;
+        socketAnimateur = socket;
+
+        socket.emit("authentification-animateur-reussie", {
+            reussi: true
+        });
+        console.log("Animateur authentifié.");
+
+        envoyerEtatAnimateur(socket);
+    });
+
     socket.on("passer-manche-suivante", () => {
+        if (!exigerAnimateur(socket, "passer-manche-suivante")) {
+            return;
+        }
         if (!partieEnCours) {
         return;
         }
@@ -222,6 +400,22 @@ io.on("connection", (socket) => {
     });
 
     socket.on("inscription-equipe", (nomEquipe) => {
+        if (socket.role === ROLE_ANIMATEUR) {
+            socket.emit(
+                "inscription-refusee",
+                "L'animateur ne peut pas s'inscrire comme équipe."
+            );
+            return;
+        }
+
+        if (socket.nomEquipe) {
+            socket.emit(
+                "inscription-refusee",
+                "Cet appareil est déjà inscrit. Utilisez « Changer d'équipe »."
+            );
+            return;
+        }
+
         if (typeof nomEquipe !== "string") {
             socket.emit(
                 "inscription-refusee",
@@ -274,6 +468,7 @@ io.on("connection", (socket) => {
         }
 
         socket.nomEquipe = nomEquipe;
+        socket.role = ROLE_EQUIPE;
 
         if (!equipes[nomEquipe]) {
 
@@ -336,6 +531,9 @@ io.on("connection", (socket) => {
     });
 
     socket.on("supprimer-equipe", (nomEquipe) => {
+        if (!exigerAnimateur(socket, "supprimer-equipe")) {
+            return;
+        }
         if (typeof nomEquipe !== "string") {
             return;
         }
@@ -361,6 +559,9 @@ io.on("connection", (socket) => {
     });
 
     socket.on("demarrer-partie", () => {
+        if (!exigerAnimateur(socket, "demarrer-partie")) {
+            return;
+        }
         mancheActuelle = "qcm";
         console.log("La partie est lancée par l'animateur");
         equipeBuzzee = null;
@@ -383,10 +584,16 @@ io.on("connection", (socket) => {
     });
 
     socket.on("affichage-classement", (afficher) => {
+        if (!exigerAnimateur(socket, "affichage-classement")) {
+            return;
+        }
         io.emit("affichage-classement", afficher);
     });
 
     socket.on("test-sprint", () => {
+        if (!exigerAnimateur(socket, "test-sprint")) {
+            return;
+        }
         console.log("MODE TEST : démarrage direct du Sprint");
 
         clearInterval(chrono);
@@ -409,6 +616,9 @@ io.on("connection", (socket) => {
     });
 
     socket.on("test-combo", () => {
+        if (!exigerAnimateur(socket, "test-combo")) {
+            return;
+        }
         console.log("🧪 Test direct du Combo");
 
         clearInterval(chrono);
@@ -441,7 +651,7 @@ io.on("connection", (socket) => {
         if (!partieEnCours || mancheActuelle !== "qcm" ||!questionEnCours || questionPrete) {
             return;
         }
-        if (!nomEquipe || !equipes[nomEquipe]) {
+        if (!estEquipeAutorisee(socket, nomEquipe)) {
             return;
         }
         if (equipes[nomEquipe].aRepondu) {
@@ -477,6 +687,9 @@ io.on("connection", (socket) => {
     });
 
     socket.on("question-suivante-qcm", () => {
+        if (!exigerAnimateur(socket, "question-suivante-qcm")) {
+            return;
+        }
         if (!partieEnCours || mancheActuelle !== "qcm") {
             return;
         }
@@ -487,6 +700,9 @@ io.on("connection", (socket) => {
     });
 
     socket.on("demarrer-question-qcm", () => {
+        if (!exigerAnimateur(socket, "demarrer-question-qcm")) {
+            return;
+        }
         console.log("Demande de démarrage QCM reçue");
 
         if (!partieEnCours || mancheActuelle !== "qcm") {
@@ -497,6 +713,12 @@ io.on("connection", (socket) => {
     });
 
     socket.on("modifier-score", (donnees) => {
+        if (!exigerAnimateur(socket, "modifier-score")) {
+            return;
+        }
+        if (!donnees || typeof donnees !== "object") {
+            return;
+        }
         const nomEquipe = donnees.nomEquipe;
         const modification = donnees.modification;
 
@@ -522,7 +744,10 @@ io.on("connection", (socket) => {
         if (!partieEnCours || mancheActuelle !== "sprint") {
             return;
         }
-        if (!socket.nomEquipe || equipeBuzzee !== null) {
+        if (equipeBuzzee !== null) {
+            return;
+        }
+        if (!estEquipeAutorisee(socket, socket.nomEquipe)) {
             return;
         }
         if (equipesElimineesSprint.includes(socket.nomEquipe)) {
@@ -535,6 +760,9 @@ io.on("connection", (socket) => {
     });
 
     socket.on("validation-sprint", (bonneReponse) => {
+        if (!exigerAnimateur(socket, "validation-sprint")) {
+            return;
+        }
         if (!partieEnCours || mancheActuelle !== "sprint") {
             return;
         }
@@ -579,6 +807,9 @@ io.on("connection", (socket) => {
     });
 
     socket.on("sprint-personne-ne-trouve", () => {
+        if (!exigerAnimateur(socket, "sprint-personne-ne-trouve")) {
+            return;
+        }
         if (!partieEnCours || mancheActuelle !== "sprint") {
             return;
         }
@@ -592,10 +823,16 @@ io.on("connection", (socket) => {
     });
 
     socket.on("demarrer-morceau-combo", () => {
+        if (!exigerAnimateur(socket, "demarrer-morceau-combo")) {
+            return;
+        }
         demarrerChronoCombo();
     });
 
     socket.on("combo-morceau-suivant", () => {
+        if (!exigerAnimateur(socket, "combo-morceau-suivant")) {
+            return;
+        }
         // Vérifier que le Combo est actif
         if (!partieEnCours || mancheActuelle !== "combo") {
             return;
@@ -645,7 +882,7 @@ io.on("connection", (socket) => {
 
         // Vérifier l'identité de l'équipe
         const nomEquipe = socket.nomEquipe;
-        if (!nomEquipe || !equipes[nomEquipe] || equipes[nomEquipe].socketId !== socket.id) {
+        if (!estEquipeAutorisee(socket, nomEquipe)) {
             return;
         }
 
@@ -664,11 +901,13 @@ io.on("connection", (socket) => {
         // Enregistrer la réponse
         enregistrerReponse(nomEquipe, morceauCombo, texte);
 
-        io.emit("combo-reponse-direct", {
-            numero: morceauCombo,
-            nomEquipe: nomEquipe,
-            reponse: texte
-        });
+        if (socketAnimateur) {
+            socketAnimateur.emit("combo-reponse-direct", {
+                numero: morceauCombo,
+                nomEquipe: nomEquipe,
+                reponse: texte
+            });
+        }
 
         console.log(
             "Combo : réponse enregistrée",
@@ -684,6 +923,9 @@ io.on("connection", (socket) => {
     });
 
     socket.on("combo-corriger", (donnees) => {
+        if (!exigerAnimateur(socket, "combo-corriger")) {
+            return;
+        }
         // Vérifier que nous sommes dans le Combo
         if (!partieEnCours || mancheActuelle !== "combo") {
             return;
@@ -767,23 +1009,16 @@ io.on("connection", (socket) => {
     });
 
     socket.on("disconnect", () => {
-        if (socket.nomEquipe && equipes[socket.nomEquipe] && equipes[socket.nomEquipe].socketId === socket.id) {
-            equipes[socket.nomEquipe].socketId =null;
-            equipes[socket.nomEquipe].connectee =false;
-            // Une équipe déconnectée ne doit pas
-            // empêcher la progression du jeu.
-            if (partieEnCours && mancheActuelle === "qcm" && questionEnCours) {
-                equipes[socket.nomEquipe].aRepondu =true;
-                if (toutesLesEquipesOntRepondu()) {
-                    clearInterval(chrono);
-                    questionSuivante();
-                }
-            }
-            io.emit("liste-equipes", creerListeEquipes());
+        if (socket === socketAnimateur) {
+            socketAnimateur = null;
+            console.log("L'animateur s'est déconnecté.");
+        }
 
-            console.log(socket.nomEquipe +" s'est déconnecté");
-        } 
-        else {
+        if (socket.nomEquipe) {
+            const nomEquipe = socket.nomEquipe;
+            detacherEquipe(socket);
+            console.log(nomEquipe + " s'est déconnecté");
+        } else {
             console.log("Un appareil vient de se déconnecter");
         }
     });
@@ -853,11 +1088,14 @@ function demarrerChronoQcm() {
     }, 1000);
 }
 
-function envoyerReponsesCombo() {
+function envoyerReponsesCombo(destinataire = socketAnimateur) {
     if (mancheActuelle !== "combo") {
         return;
     }
     if (reponsesOuvertesCombo) {
+        return;
+    }
+    if (!destinataire) {
         return;
     }
     const resultats = [];
@@ -870,7 +1108,8 @@ function envoyerReponsesCombo() {
         });
     }
 
-    io.emit("combo-reponses-correction", {
+    // Les réponses de toutes les équipes ne vont qu'à l'animateur.
+    destinataire.emit("combo-reponses-correction", {
         numero: morceauCombo,
         reponses: resultats
     });
@@ -1042,4 +1281,6 @@ function creerListeEquipes() {
 serveur.listen(3000, () => {
     console.log("Musikal Kombat est lancé !");
     console.log("http://localhost:3000");
+    console.log("🔐 Code animateur : " + CODE_ANIMATEUR +
+        " (à transmettre au présentateur)");
 });

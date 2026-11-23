@@ -1,5 +1,20 @@
 const socket = io();
 
+const zoneConnexionAnimateur =
+    document.getElementById("zoneConnexionAnimateur");
+const zoneControleAnimateur =
+    document.getElementById("controleAnimateur");
+const formConnexionAnimateur =
+    document.getElementById("formConnexionAnimateur");
+const codeAnimateurInput =
+    document.getElementById("codeAnimateur");
+const boutonConnexionAnimateur =
+    formConnexionAnimateur.querySelector("button[type='submit']");
+const statusConnexionAnimateur =
+    document.getElementById("statusConnexionAnimateur");
+
+let codeAnimateur = null;
+
 const boutonNouvellePartie =
     document.getElementById("nouvellePartie");
 const statusAnimateur =
@@ -87,11 +102,77 @@ boutonNouvellePartie.disabled = true;
 boutonMancheSuivante.disabled = true;
 
 socket.on("connect", () => {
-    console.log("Animateur connecté au serveur");
+    console.log("Connecté au serveur");
+
+    const codeSauvegarde = sessionStorage.getItem(
+        "musikalKombatAnimateur"
+    );
+
+    if (codeSauvegarde) {
+        codeAnimateur = codeSauvegarde;
+        statusConnexionAnimateur.textContent =
+            "Connexion à la partie...";
+        socket.emit(
+            "authentifier-animateur",
+            codeAnimateur
+        );
+    }
 });
 
 socket.on("disconnect", () => {
-    console.log("Animateur déconnecté du serveur");
+    console.log("Déconnecté du serveur");
+});
+
+formConnexionAnimateur.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    codeAnimateur = codeAnimateurInput.value.trim();
+    if (!codeAnimateur) {
+        return;
+    }
+
+    boutonConnexionAnimateur.disabled = true;
+    statusConnexionAnimateur.textContent =
+        "Vérification du code...";
+
+    socket.emit("authentifier-animateur", codeAnimateur);
+});
+
+socket.on("authentification-animateur-reussie", () => {
+    sessionStorage.setItem(
+        "musikalKombatAnimateur",
+        codeAnimateur
+    );
+    zoneConnexionAnimateur.style.display = "none";
+    zoneControleAnimateur.style.display = "block";
+    boutonConnexionAnimateur.disabled = false;
+    console.log("Accès animateur accordé");
+});
+
+socket.on("authentification-animateur-echec", (echec) => {
+    sessionStorage.removeItem("musikalKombatAnimateur");
+    codeAnimateur = null;
+    codeAnimateurInput.value = "";
+    zoneConnexionAnimateur.style.display = "block";
+    zoneControleAnimateur.style.display = "none";
+    boutonConnexionAnimateur.disabled = false;
+    statusConnexionAnimateur.textContent = echec.message;
+    codeAnimateurInput.focus();
+});
+
+socket.on("role-animateur-retire", (information) => {
+    sessionStorage.removeItem("musikalKombatAnimateur");
+    codeAnimateur = null;
+    codeAnimateurInput.value = "";
+    zoneControleAnimateur.style.display = "none";
+    zoneConnexionAnimateur.style.display = "block";
+    boutonConnexionAnimateur.disabled = false;
+    statusConnexionAnimateur.textContent = information.raison;
+    console.warn("Rôle animateur retiré :", information.raison);
+});
+
+socket.on("action-refusee", (refus) => {
+    console.warn("Action refusée par le serveur :", refus);
 });
 
 socket.on("manche-changee", (manche) => {
